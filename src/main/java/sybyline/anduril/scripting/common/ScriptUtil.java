@@ -123,7 +123,6 @@ public final class ScriptUtil implements IScriptUtil {
 				string.append(chr);
 			}
 		}
-		System.out.println(string);
 		return string.toString();
 	}
 

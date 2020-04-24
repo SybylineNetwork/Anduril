@@ -146,7 +146,6 @@ public abstract class AbstractScript implements Script {
 		} else {
 			ret = new NashornScript();
 		}
-		System.out.println(ret);
 		return ret;
 	}
 

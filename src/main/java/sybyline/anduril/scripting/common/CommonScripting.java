@@ -11,6 +11,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.*;
 import sybyline.anduril.extensions.SybylineNetwork;
 import sybyline.anduril.scripting.api.common.*;
@@ -23,8 +24,8 @@ public final class CommonScripting {
 
 	private CommonScripting() {}
 
-	public static final CommonScripting INSTANCE = new CommonScripting();
 	public static final Logger LOGGER = LogManager.getLogger();
+	public static final CommonScripting INSTANCE = new CommonScripting();
 
 	static {
 		LOGGER.info("Sybyline Custom Scripting has been loaded!");
@@ -32,7 +33,7 @@ public final class CommonScripting {
 
 	public final SybylineNetwork network = new SybylineNetwork(new ResourceLocation(Util.ANDURIL, "scripting"), Util.ANDURIL, network -> {
 		network.register(S2CSybylineGui.class, S2CSybylineGui::new);
-	});
+	}, s->true);
 
 	public final ICache<UUID, CompoundNBT, ScriptPlayerData> player_data = ICache.files
 		(new ResourceLocation(Util.SYBYLINE, "player_data"), IFormat.NBT, ScriptPlayerData::new, UUID::toString).setVerbosity(true);
@@ -64,6 +65,10 @@ public final class CommonScripting {
 
 	public void setExtensionsEnabledServer(boolean serverAddons) {
 		this.serverAddons = serverAddons;
+	}
+
+	public void commonStart(FMLCommonSetupEvent event) {
+		
 	}
 
 	public void gameStart(FMLClientSetupEvent event) {

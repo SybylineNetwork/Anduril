@@ -12,7 +12,7 @@ import jdk.nashorn.internal.runtime.options.*;
 import sybyline.satiafenris.ene.NashornScript;
 import sybyline.satiafenris.ene.Script;
 
-@SuppressWarnings({"restriction","unused"})
+@SuppressWarnings("unused")
 public class JSAST {
 
 	public static String load(String resource) {

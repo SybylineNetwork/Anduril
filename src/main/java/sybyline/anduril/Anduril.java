@@ -43,6 +43,7 @@ public class Anduril {
     }
 
     private void setup(FMLCommonSetupEvent event) {
+    	CommonScripting.INSTANCE.commonStart(event);
         Submod.loadSubmods();
         ModList.get().getModContainerById(MODID).map(ModContainer::getModInfo).map(IModInfo::getVersion).map(ArtifactVersion::toString).ifPresent(VERSION::parseVersion);
     }

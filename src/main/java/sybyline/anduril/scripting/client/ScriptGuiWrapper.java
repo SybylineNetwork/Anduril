@@ -15,7 +15,7 @@ import sybyline.anduril.scripting.api.*;
 import sybyline.anduril.scripting.common.*;
 import sybyline.satiafenris.ene.*;
 
-public class ScriptGuiWrapper<SubScreen extends FocusableGui & IRenderable> extends Screen {
+public class ScriptGuiWrapper<SubScreen extends FocusableGui&IRenderable> extends Screen {
 
 	public ScriptGuiWrapper(ResourceLocation resource_id, String js, Object data) {
 		super(new StringTextComponent(resource_id.toString()));

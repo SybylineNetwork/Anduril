@@ -4,7 +4,6 @@ import jdk.nashorn.api.scripting.*;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.*;
 
-@SuppressWarnings("restriction")
 public class ArgMap {
 
 	public static final SimpleCommandExceptionType REQUIRED_ARG = new SimpleCommandExceptionType(() -> "sybyline.scriptcmd.required");
