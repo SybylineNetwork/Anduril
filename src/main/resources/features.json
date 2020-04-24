@@ -1,0 +1,24 @@
+{
+	"current": {
+		"client.guis": {
+			"since": "0.0.0",
+			"description": "Allows guis and overlays to be defined in resourcepacks"
+		},
+		"server.commands": {
+			"since": "0.0.0",
+			"description": "Allows commands to be defined in datapacks"
+		},
+		"server.events": {
+			"since": "0.0.0",
+			"description": "Allows event handlers to be defined in datapacks"
+		}
+	},
+	"future": {
+		"client.tooltips": {
+			"description": "Allows tooltip additions to be defined in resourcepacks"
+		},
+		"common.lotr": {
+			"description": "Compatibility module with LOTR:Renewed"
+		}
+	}
+}
