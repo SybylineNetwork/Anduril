@@ -16,7 +16,12 @@ public class LOTRSubmod extends Submod {
 
 	@Override
 	protected void submodSetup() {
-		LOGGER.info("Hello from submod setup!");
+		LOGGER.info("Submod setup!");
+	}
+
+	@Override
+	protected void enqueIMCMessages() {
+		LOGGER.info("Submod IMCMessages!");
 	}
 
 }

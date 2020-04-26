@@ -232,7 +232,9 @@ public final class ScriptGui<SubScreen extends FocusableGui & IRenderable> imple
 	}
 
 	public IScriptButton new_button(int x, int y, int w, int h, int z, String msg, Runnable clickAction, Runnable hoverAction) {
-		return new ScriptButton(x, y, w, h, z, msg, clickAction, hoverAction);
+		ScriptButton ret = new ScriptButton(x, y, w, h, z, msg, clickAction, hoverAction);
+		ret._internal_screen = this;
+		return ret;
 	}
 	
 	public IScriptInput<String> new_textfield(int x, int y, int w, int h, String text) {

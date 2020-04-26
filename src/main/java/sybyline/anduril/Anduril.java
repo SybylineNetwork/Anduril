@@ -1,11 +1,9 @@
 package sybyline.anduril;
 
-import net.minecraft.block.Block;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.*;
 import net.minecraftforge.eventbus.api.*;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.*;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.*;
 import net.minecraftforge.fml.event.server.*;
@@ -13,6 +11,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.forgespi.language.IModInfo;
 import sybyline.anduril.extensions.Submod;
 import sybyline.anduril.scripting.common.CommonScripting;
+import sybyline.anduril.scripting.server.ServerManagement;
 
 import org.apache.logging.log4j.*;
 import org.apache.maven.artifact.versioning.*;
@@ -54,7 +53,12 @@ public class Anduril {
     }
 
     @SubscribeEvent
+    public void serverStartPre(FMLServerAboutToStartEvent event) {
+    }
+
+    @SubscribeEvent
     public void serverStart(FMLServerStartingEvent event) {
+    	ServerManagement.INSTANCE.serverStart(event);
     	CommonScripting.INSTANCE.serverStart(event);
     }
 
@@ -71,19 +75,32 @@ public class Anduril {
     @SubscribeEvent
     public void serverClose(FMLServerStoppingEvent event) {
     	CommonScripting.INSTANCE.serverStop(event);
+    	ServerManagement.INSTANCE.serverStop(event);
+    }
+
+    @SubscribeEvent
+    public void serverClosePost(FMLServerStoppedEvent event) {
     }
 
     private void enqueueIMC(InterModEnqueueEvent event) {
+    	Submod.interModCommsEnqueue();
     }
 
     private void processIMC(InterModProcessEvent event) {
+    	event.getIMCStream().forEach(msg -> {
+    		// String from = msg.getSenderModId();
+    		// String method = msg.getMethod();
+    		// Handle compatibility
+    	});
     }
 
+/*
     @Mod.EventBusSubscriber(bus=Mod.EventBusSubscriber.Bus.MOD)
     public static class RegistryEvents {
         @SubscribeEvent
         public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {
         }
     }
+*/
 
 }

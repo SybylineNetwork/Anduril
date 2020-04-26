@@ -6,14 +6,10 @@ import org.apache.commons.io.FileUtils;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.LogicalSide;
-import sybyline.anduril.scripting.api.ClientScriptExtensions;
-import sybyline.anduril.scripting.api.CommonScriptExtensions;
-import sybyline.anduril.scripting.api.ServerScriptExtensions;
-import sybyline.anduril.scripting.server.ScriptServer;
+import sybyline.anduril.scripting.api.*;
 import sybyline.anduril.util.Util;
 import sybyline.anduril.util.data.IFormat;
-import sybyline.satiafenris.ene.Script;
-import sybyline.satiafenris.ene.ScriptRuntimeException;
+import sybyline.satiafenris.ene.*;
 
 public abstract class ScriptWrapper<T> {
 
@@ -49,7 +45,7 @@ public abstract class ScriptWrapper<T> {
 				CommonScriptExtensions.forEach((name, function) -> script.bind(name, function.apply(this.script)));
 				ServerScriptExtensions.forEach((name, function) -> script.bind(name, function.apply(this.script)));
 			}
-			this.script.bind("server", ScriptServer.INSTANCE);
+			this.script.bind("server", CommonScripting.INSTANCE.getScriptServerFor(domain).scriptserver);
 		} else {
 			if (CommonScripting.INSTANCE.areClientAddonsEnabled()) {
 				CommonScriptExtensions.forEach((name, function) -> script.bind(name, function.apply(this.script)));

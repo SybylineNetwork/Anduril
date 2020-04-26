@@ -33,10 +33,13 @@ public final class CommonScripting {
 
 	public final SybylineNetwork network = new SybylineNetwork(new ResourceLocation(Util.ANDURIL, "scripting"), Util.ANDURIL, network -> {
 		network.register(S2CSybylineGui.class, S2CSybylineGui::new);
-	}, s->true);
+	});
 
 	public final ICache<UUID, CompoundNBT, ScriptPlayerData> player_data = ICache.files
 		(new ResourceLocation(Util.SYBYLINE, "player_data"), IFormat.NBT, ScriptPlayerData::new, UUID::toString).setVerbosity(true);
+
+	public final ICache<String, CompoundNBT, ScriptServerData> server_data = ICache.files
+		(new ResourceLocation(Util.SYBYLINE, "server_data"), IFormat.NBT, ScriptServerData::new, String::valueOf).setVerbosity(true);
 
 	private Consumer<String> println_debug = LOGGER::debug;
 
@@ -125,6 +128,10 @@ public final class CommonScripting {
 			return getScriptLivingFor((LivingEntity)entity, domain);
 		}
 		return null;
+	}
+
+	public ScriptServerData getScriptServerFor(String domain) {
+		return server_data.getOrCreate(domain);
 	}
 
 }

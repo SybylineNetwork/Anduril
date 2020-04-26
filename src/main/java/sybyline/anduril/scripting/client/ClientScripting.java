@@ -14,6 +14,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import sybyline.anduril.scripting.common.CommonScripting;
 import sybyline.anduril.scripting.common.ScriptUtil;
+import sybyline.anduril.scripting.common.ScriptWrapperSimple;
 import sybyline.anduril.util.Util;
 import sybyline.anduril.util.data.SimpleReloadListener;
 
@@ -28,6 +29,7 @@ public final class ClientScripting {
 		mc = event.getMinecraftSupplier().get();
 		mc_resources = (IReloadableResourceManager)mc.getResourceManager();
 		mc_resources.addReloadListener(SimpleReloadListener.prepare(this::clientReloadGui).call());
+		mc_resources.addReloadListener(SimpleReloadListener.prepare(this::clientReloadTooltips).call());
 		MinecraftForge.EVENT_BUS.register(this);
 		CommonScripting.INSTANCE.setPrintln_debug(string -> {
 			if (mc.gameSettings.showDebugInfo) {
@@ -42,9 +44,11 @@ public final class ClientScripting {
 
 	// Custom overlay
 
-	public static final ResourceLocation OVERLAY = new ResourceLocation(Util.ANDURIL, "overlay");
+	public static final ResourceLocation OVERLAY = new ResourceLocation(Util.ANDURIL, "special/overlay");
+	public static final ResourceLocation TOOLTIPS = new ResourceLocation(Util.ANDURIL, "special/tooltips");
 
 	public ScriptGuiWrapper<?> game_overlay = null;
+	public ScriptWrapperSimple tooltips = null;
 
 	private int prevWidth = -1, prevHeight = -1;
 
@@ -91,6 +95,18 @@ public final class ClientScripting {
 		}
 	}
 
+	private void clientReloadTooltips(IResourceManager __) {
+		// TODO : tooltips
+		String js = js(TOOLTIPS);
+		if (js != null) {
+			tooltips = new ScriptWrapperSimple("tooltips", js);
+			tooltips.setupWithContext(null);
+		} else {
+			CommonScripting.LOGGER.info("No tooltips " + TOOLTIPS);
+			tooltips = null;
+		}
+	}
+
 	public void serverSendsGui(ResourceLocation loc, boolean redisplay, CompoundNBT nbt) {
 		try {
 			if (mc.currentScreen != null && mc.currentScreen instanceof ScriptGuiWrapper) {
@@ -124,7 +140,7 @@ public final class ClientScripting {
 
 	private String js(ResourceLocation loc) {
 		if (loc != null) try {
-			IResource res = mc_resources.getResource(Util.Structs.sandwich(loc, Util.ANDURIL + "/guis/", ".js"));
+			IResource res = mc_resources.getResource(Util.Structs.sandwich(loc, Util.ANDURIL, ".js"));
 			return Util.IO.readString(res.getInputStream());
 		} catch(Exception e) {
 		}

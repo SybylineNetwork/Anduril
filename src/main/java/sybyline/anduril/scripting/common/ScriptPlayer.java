@@ -1,5 +1,6 @@
 package sybyline.anduril.scripting.common;
 
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import net.minecraft.entity.Entity;
@@ -11,6 +12,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
 import sybyline.anduril.scripting.api.data.IScriptData;
+import sybyline.anduril.scripting.api.server.IPermission;
+import sybyline.anduril.scripting.server.ServerScripting;
 import sybyline.anduril.util.math.Vector;
 
 public class ScriptPlayer implements IScriptPlayer {
@@ -101,12 +104,32 @@ public class ScriptPlayer implements IScriptPlayer {
 
 	@Override
 	public String name() {
-		return check().getScoreboardName();
+		return check().getGameProfile().getName();
+	}
+
+	@Override
+	public UUID uuid() {
+		return check().getGameProfile().getId();
 	}
 
 	@Override
 	public void send_chat(String text) {
 		check().sendMessage(new StringTextComponent(text));
+	}
+
+	@Override
+	public boolean hasPermission(IPermission permission) {
+		return ServerScripting.INSTANCE.hasPermission(parent.profile, permission);
+	}
+
+	@Override
+	public void grantPermission(IPermission permission) {
+		parent.permissions.add(permission.key());
+	}
+
+	@Override
+	public void revokePermission(IPermission permission) {
+		parent.permissions.remove(permission.key());
 	}
 
 }

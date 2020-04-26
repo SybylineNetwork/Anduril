@@ -12,6 +12,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import net.minecraftforge.forgespi.language.ModFileScanData.AnnotationData;
 import sybyline.anduril.extensions.annotation.SubmodMarker;
+import sybyline.anduril.extensions.client.SubmodClient;
 
 /**
  * Submods extend from this class, have an {@code @Submod.Marker} on their type,
@@ -37,6 +38,11 @@ public abstract class Submod {
 	 * Called during the FMLCommonSetupEvent. Make calls to the Submod API during this event
 	 */
 	protected abstract void submodSetup();
+
+	/**
+	 * Called during the FMLCommonSetupEvent. Make calls to the Submod API during this event
+	 */
+	protected abstract void enqueIMCMessages();
 
 	/**
 	 * Ensure that some task gets run synchronously, by default, submods are initialized concurrently
@@ -139,6 +145,17 @@ public abstract class Submod {
 				LOGGER.info("Initialized " + submods.size() + " submods");
 			}
 		}
+	}
+
+	public static void interModCommsEnqueue() {
+		submods.forEach(submod -> {
+    		try {
+    			submod.enqueIMCMessages();
+    		} catch(Exception e) {
+    			LOGGER.error("Submod errored during InterModComms: " + submod.submod_id + ":", e);
+    			e.printStackTrace();
+    		}
+    	});
 	}
 
 	public static void gameStart(FMLClientSetupEvent event) {

@@ -11,14 +11,25 @@
 		"server.events": {
 			"since": "0.0.0",
 			"description": "Allows event handlers to be defined in datapacks"
+		},
+		"server.data": {
+			"since": "0.0.1",
+			"description": "Allows arbitrary data structures to be constructed easily"
+		},
+		"server.permissions": {
+			"since": "0.0.1",
+			"description": "Allows player permissions to be configured"
+		}
+	},
+	"wip": {
+		"common.lotr": {
+			"since": "0.0.1",
+			"description": "Compatibility module with LOTR:Renewed"
 		}
 	},
 	"future": {
 		"client.tooltips": {
 			"description": "Allows tooltip additions to be defined in resourcepacks"
-		},
-		"common.lotr": {
-			"description": "Compatibility module with LOTR:Renewed"
 		}
 	}
 }

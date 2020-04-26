@@ -31,9 +31,16 @@ public interface IScriptGui<SubScreen extends FocusableGui & IRenderable> {
 
 	// Shapes
 
-	public void draw_lineHorizontal(int p_hLine_1_, int p_hLine_2_, int p_hLine_3_, int p_hLine_4_);
+	public void draw_lineHorizontal(int x1, int x2, int y, int color);
 
-	public void draw_lineVertical(int p_vLine_1_, int p_vLine_2_, int p_vLine_3_, int p_vLine_4_);
+	public void draw_lineVertical(int x, int y1, int y2, int color);
+
+	public default void draw_lineBox(int x, int y, int w, int h, int color) {
+		this.draw_lineHorizontal(x, x + w - 1, y, color);
+		this.draw_lineHorizontal(x, x + w - 1, y + h - 1, color);
+		this.draw_lineVertical(x, y, y + h, color);
+		this.draw_lineVertical(x + w - 1, y, y + h, color);
+	}
 
 	public void draw_pointSmall(int x, int y, int color);
 

@@ -21,12 +21,12 @@ public class ServerEvents {
 
 	private void reloadJS(Map<ResourceLocation, ScriptEventWrapper> data, IResourceManager resources, IProfiler profiler) {
 		profiler.startSection("sybyline_events_register");
-		wrappers.clear();
 		wrappers.values().forEach(ScriptEventWrapper::unlisten);
+		wrappers.clear();
 		data.forEach(this::registerJS);
 		profiler.endSection();
 	}
-	
+
 	private void registerJS(ResourceLocation location, ScriptEventWrapper event) {
 		try {
 			CommonScripting.INSTANCE.println_debug("Building script event: " + location);
