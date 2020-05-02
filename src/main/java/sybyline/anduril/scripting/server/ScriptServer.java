@@ -3,8 +3,8 @@ package sybyline.anduril.scripting.server;
 import sybyline.anduril.scripting.api.data.IScriptData;
 import sybyline.anduril.scripting.api.server.IPermissionConfigure;
 import sybyline.anduril.scripting.api.server.IScriptServer;
-import sybyline.anduril.scripting.common.ScriptServerData;
 import sybyline.anduril.scripting.common.ScriptUtil;
+import sybyline.anduril.scripting.data.ScriptServerData;
 
 public class ScriptServer implements IScriptServer {
 

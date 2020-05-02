@@ -16,32 +16,37 @@ public final class Convert {
 
 	@Nullable
 	public static String js_string_of(Object object) {
+		return js_string_of(object, true);
+	}
+
+	@Nullable
+	public static String js_string_of(Object object, boolean quote_strings) {
 		// Null
 		if (object == null)
 			return "null";
 		INBT nbt = nbt_of(object);
 		StringBuilder builder = new StringBuilder();
-		_string_append(builder, nbt);
+		_string_append(builder, nbt, quote_strings);
 		return builder.toString();
 	}
 
-	private static void _string_append(StringBuilder string, INBT nbt) {
+	private static void _string_append(StringBuilder string, INBT nbt, boolean quote_strings) {
 		if (nbt instanceof NumberNBT) {
 			string.append(((NumberNBT)nbt).getAsNumber());
 		} else if (nbt instanceof StringNBT) {
-			string.append('\"');
+			if (quote_strings) string.append('\"');
 			String str = ((StringNBT)nbt).getString();
 			for (int i = 0; i < str.length(); i++) {
 				char chr = str.charAt(i);
 				if (chr == '\"') string.append('\\');
 				string.append(chr);
 			}
-			string.append('\"');
+			if (quote_strings) string.append('\"');
 		} else if (nbt instanceof CollectionNBT) {
 			CollectionNBT<?> collection = (CollectionNBT<?>)nbt;
 			string.append('[');
 			for (int i = 0; i < collection.size(); i++) {
-				_string_append(string, collection.get(i));
+				_string_append(string, collection.get(i), true);
 				string.append(',');
 			}
 			string.setCharAt(string.length() - 1, ']');
@@ -51,7 +56,7 @@ public final class Convert {
 			boolean back = false;
 			for (String key : compound.keySet()) {
 				string.append('\"').append(key).append('\"').append(':');
-				_string_append(string, compound.get(key));
+				_string_append(string, compound.get(key), true);
 				string.append(',');
 				back = true;
 			}

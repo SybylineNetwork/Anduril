@@ -10,7 +10,7 @@ import net.minecraftforge.server.permission.context.IContext;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
 import sybyline.anduril.scripting.api.server.*;
 import sybyline.anduril.scripting.common.CommonScripting;
-import sybyline.anduril.scripting.common.ScriptServerData;
+import sybyline.anduril.scripting.data.ScriptServerData;
 
 public class ServerPermissions implements IPermissionHandler {
 
@@ -58,6 +58,19 @@ public class ServerPermissions implements IPermissionHandler {
 		return nodes.getOrDefault(node, NULL_NODE).desc;
 	}
 
+	// Custom
+
+	public boolean hasPermission(GameProfile profile, IPermission permission) {
+		return hasPermissionRecurse(profile, permission);
+	}
+
+	private boolean hasPermissionRecurse(GameProfile profile, IPermission permission) {
+		Set<String> perms = CommonScripting.INSTANCE.getScriptDataFor(profile.getId()).permissions;
+		return perms.contains(permission.key())
+			? true
+			: permission.children().stream().anyMatch(child -> hasPermissionRecurse(profile, child));
+	}
+
 	public class PermissionNode implements IPermission {
 		PermissionNode(String node, DefaultPermissionLevel level, String desc) {
 			int idx = node.indexOf('.');
@@ -92,7 +105,7 @@ public class ServerPermissions implements IPermissionHandler {
 		private final ScriptServerData domain;
 		@Override
 		public IPermission new_node(String node, String desc) {
-			return get_node_internal(domain.domain, node, desc);
+			return get_or_new_node_internal(domain.domain, node, desc);
 		}
 		@Override
 		public IPermission get_node(String node) {
@@ -100,9 +113,9 @@ public class ServerPermissions implements IPermissionHandler {
 		}
 		@Override
 		public IPermission get_command(String command) {
-			return get_node_internal("command", command, command);
+			return get_or_new_node_internal("command", command, command);
 		}
-		private IPermission get_node_internal(String prefix, String node, String desc) {
+		private IPermission get_or_new_node_internal(String prefix, String node, String desc) {
 			String key = prefix + '.' + node;
 			PermissionNode perm = nodes.get(key);
 			if (perm == null) {

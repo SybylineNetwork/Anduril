@@ -140,7 +140,7 @@ public final class ClientScripting {
 
 	private String js(ResourceLocation loc) {
 		if (loc != null) try {
-			IResource res = mc_resources.getResource(Util.Structs.sandwich(loc, Util.ANDURIL, ".js"));
+			IResource res = mc_resources.getResource(Util.Structs.sandwich(loc, Util.ANDURIL+"/", ".js"));
 			return Util.IO.readString(res.getInputStream());
 		} catch(Exception e) {
 		}

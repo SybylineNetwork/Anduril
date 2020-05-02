@@ -2,15 +2,21 @@ package sybyline.anduril.scripting.server.cmd;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.*;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.arguments.EntityArgument;
+import net.minecraft.command.arguments.NBTCompoundTagArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
 import sybyline.anduril.scripting.common.CommonScripting;
 import sybyline.anduril.util.function.TriFunction;
@@ -23,6 +29,11 @@ public class RequiredArg<T> extends NamedArg<T> {
 	protected RequiredArg(String name, TriFunction<CommandContext<CommandSource>, String, String, T, CommandSyntaxException> getter) {
 		super(name);
 		this.getter = getter;
+	}
+
+	protected RequiredArg(String name, BiFunction<CommandContext<CommandSource>, String, T> getter) {
+		super(name);
+		this.getter = (ctx, str, __) -> getter.apply(ctx, str);
 	}
 
 	private final TriFunction<CommandContext<CommandSource>, String, String, T, CommandSyntaxException> getter;
@@ -58,6 +69,26 @@ public class RequiredArg<T> extends NamedArg<T> {
 			Collection<ServerPlayerEntity> players = EntityArgument.getPlayers(context, arg);
 			return players.parallelStream().map(player -> CommonScripting.INSTANCE.getScriptPlayerFor(player, domain)).collect(Collectors.toList());
 		});
+	}
+
+	public static RequiredArg<Boolean> ofBoolean(String name) {
+		return new RequiredArg<Boolean>(name, BoolArgumentType::getBool);
+	}
+
+	public static RequiredArg<Integer> ofInteger(String name) {
+		return new RequiredArg<Integer>(name, IntegerArgumentType::getInteger);
+	}
+
+	public static RequiredArg<Double> ofDouble(String name) {
+		return new RequiredArg<Double>(name, DoubleArgumentType::getDouble);
+	}
+
+	public static RequiredArg<String> ofString(String name) {
+		return new RequiredArg<String>(name, StringArgumentType::getString);
+	}
+
+	public static RequiredArg<CompoundNBT> ofCompound(String name) {
+		return new RequiredArg<CompoundNBT>(name, NBTCompoundTagArgument::getNbt);
 	}
 
 	public static RequiredArg<String> ofStrings(String name, List<String> collect) {

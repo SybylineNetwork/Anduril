@@ -84,14 +84,16 @@ public final class ScriptUtil implements IScriptUtil {
 		return new MCResource(domain, path);
 	}
 
-	public ItemStack new_item(String item, int size) {
+	public IMCItem new_item(String item, int size) {
+		ItemStack stack;
 		try {
-			return ItemArgument.item().parse(new StringReader(item)).createStack(size, false);
+			stack = ItemArgument.item().parse(new StringReader(item)).createStack(size, false);
 		} catch (Exception e) {
 			ScriptUtil.INSTANCE.log("Invalid item argument:" + item);
 			e.printStackTrace();
-			return new ItemStack(Blocks.STONE, size);
+			stack = new ItemStack(Blocks.STONE, size);
 		}
+		return new MCItem(stack);
 	}
 
 	// Internal
@@ -111,12 +113,12 @@ public final class ScriptUtil implements IScriptUtil {
 							if (param instanceof IScriptCommandFormattable) {
 								((IScriptCommandFormattable)param).toCommandString(string);
 							} else {
-								string.append(Convert.js_string_of(param));
+								String print = Convert.js_string_of(param, false);
+								string.append(print);
 							}
 						} else {
 							string.append(chr).append(next);
 						}
-						continue;
 					}
 				}
 			} else {

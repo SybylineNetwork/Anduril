@@ -2,7 +2,6 @@ package sybyline.anduril.scripting.common;
 
 import java.util.UUID;
 import java.util.function.Supplier;
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -13,7 +12,8 @@ import net.minecraft.util.text.StringTextComponent;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
 import sybyline.anduril.scripting.api.data.IScriptData;
 import sybyline.anduril.scripting.api.server.IPermission;
-import sybyline.anduril.scripting.server.ServerScripting;
+import sybyline.anduril.scripting.data.ScriptPlayerData;
+import sybyline.anduril.scripting.server.ServerManagement;
 import sybyline.anduril.util.math.Vector;
 
 public class ScriptPlayer implements IScriptPlayer {
@@ -119,7 +119,7 @@ public class ScriptPlayer implements IScriptPlayer {
 
 	@Override
 	public boolean hasPermission(IPermission permission) {
-		return ServerScripting.INSTANCE.hasPermission(parent.profile, permission);
+		return ServerManagement.INSTANCE.permissions.hasPermission(parent.profile, permission);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package sybyline.anduril.scripting.common;
+package sybyline.anduril.network;
 
 import java.util.function.Supplier;
 import net.minecraft.nbt.CompoundNBT;
@@ -11,9 +11,9 @@ import sybyline.anduril.extensions.SybylineNetwork.PacketSpec;
 import sybyline.anduril.scripting.client.ClientScripting;
 import sybyline.anduril.util.Util;
 
-public final class S2CSybylineGui implements PacketSpec<S2CSybylineGui> {
+public final class S2CDisplayGui implements PacketSpec<S2CDisplayGui> {
 
-	public S2CSybylineGui with(ResourceLocation loc, boolean redisplay, CompoundNBT nbt) {
+	public S2CDisplayGui with(ResourceLocation loc, boolean redisplay, CompoundNBT nbt) {
 		this.loc = loc;
 		this.redisplay = redisplay;
 		this.nbt = nbt;
@@ -37,7 +37,7 @@ public final class S2CSybylineGui implements PacketSpec<S2CSybylineGui> {
 	}
 
 	public void handle(Supplier<Context> context) {
-		S2CSybylineGui packet = this;
+		S2CDisplayGui packet = this;
 		DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
 			context.get().enqueueWork(() -> {
 				ClientScripting.INSTANCE.serverSendsGui(packet.loc, packet.redisplay, packet.nbt);

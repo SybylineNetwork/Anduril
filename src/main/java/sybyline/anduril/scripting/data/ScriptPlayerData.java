@@ -1,4 +1,4 @@
-package sybyline.anduril.scripting.common;
+package sybyline.anduril.scripting.data;
 
 import java.util.*;
 import com.google.common.collect.*;
@@ -9,7 +9,7 @@ import net.minecraft.nbt.StringNBT;
 import net.minecraftforge.common.util.Constants.NBT;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
 import sybyline.anduril.scripting.api.data.IScriptData;
-import sybyline.anduril.scripting.data.ScriptData;
+import sybyline.anduril.scripting.common.ScriptPlayer;
 import sybyline.anduril.scripting.server.ServerScripting;
 import sybyline.anduril.util.data.ICachable;
 
@@ -21,10 +21,10 @@ public class ScriptPlayerData implements ICachable<CompoundNBT> {
 	}
 
 	final UUID uuid;
-	final GameProfile profile;
+	public final GameProfile profile;
 	private final Map<String, ScriptPlayer> scriptdata = Maps.newHashMap();
 	private final Map<String, ScriptData> domaindata = Maps.newHashMap();
-	final Set<String> permissions = Sets.newHashSet();
+	public final Set<String> permissions = Sets.newHashSet();
 
 	public final IScriptPlayer scriptdata(String domain) {
 		return scriptdata.computeIfAbsent(domain, dom -> new ScriptPlayer(dom, this, () -> ServerScripting.INSTANCE.server.getPlayerList().getPlayerByUUID(uuid)));

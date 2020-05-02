@@ -1,5 +1,6 @@
 package sybyline.anduril;
 
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.*;
 import net.minecraftforge.eventbus.api.*;
@@ -9,7 +10,8 @@ import net.minecraftforge.fml.event.lifecycle.*;
 import net.minecraftforge.fml.event.server.*;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.forgespi.language.IModInfo;
-import sybyline.anduril.extensions.Submod;
+import sybyline.anduril.extensions.*;
+import sybyline.anduril.network.*;
 import sybyline.anduril.scripting.common.CommonScripting;
 import sybyline.anduril.scripting.server.ServerManagement;
 
@@ -30,8 +32,14 @@ public class Anduril {
     	return instance;
     }
 
+	public SybylineNetwork network;
+
     public Anduril() {
-    	instance = this;
+    	synchronized(Anduril.class) {
+    		if (instance != null)
+    			throw new IllegalArgumentException("Can't create multiple mod instances!");
+    		instance = this;
+    	}
         IEventBus mods = FMLJavaModLoadingContext.get().getModEventBus();
 	        mods.addListener(this::setup);
 	        mods.addListener(this::gameStart);
@@ -39,12 +47,18 @@ public class Anduril {
 	        mods.addListener(this::processIMC);
         IEventBus forge = MinecraftForge.EVENT_BUS;
         	forge.register(this);
+        AndurilGameRules.init();
     }
 
     private void setup(FMLCommonSetupEvent event) {
+    	ModList.get().getModContainerById(MODID).map(ModContainer::getModInfo).map(IModInfo::getVersion).map(ArtifactVersion::toString).ifPresent(VERSION::parseVersion);
+    	network = new SybylineNetwork(new ResourceLocation(MODID, "main"), MODID, network -> {
+    		network.register(S2CDisplayGui.class, S2CDisplayGui::new);
+    		network.register(C2SAttackEntity.class, C2SAttackEntity::new);
+    		network.register(S2CSyncGameRules.class, S2CSyncGameRules::new);
+    	});
     	CommonScripting.INSTANCE.commonStart(event);
         Submod.loadSubmods();
-        ModList.get().getModContainerById(MODID).map(ModContainer::getModInfo).map(IModInfo::getVersion).map(ArtifactVersion::toString).ifPresent(VERSION::parseVersion);
     }
 
     private void gameStart(FMLClientSetupEvent event) {

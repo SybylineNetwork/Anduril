@@ -1,7 +1,6 @@
 package sybyline.anduril.scripting.client;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
 import sybyline.anduril.scripting.api.client.*;
 
@@ -25,14 +24,14 @@ public class ScriptButton extends ExtendedButton implements IScriptButton {
 
 	@Override
 	public void renderButton(int mouseX, int mouseY, float partialTicks) {
-		GlStateManager.translatef(0, 0, z);
+		RenderSystem.translatef(0, 0, z);
 		if (texture == null) {
 			super.renderButton(mouseX, mouseY, partialTicks);
 		} else {
 			texture.draw(_internal_screen, x, y, width, height);
 		}
 		if (this.isHovered) hover.run();
-		GlStateManager.translatef(0, 0,-z);
+		RenderSystem.translatef(0, 0,-z);
 	}
 
 	@Override

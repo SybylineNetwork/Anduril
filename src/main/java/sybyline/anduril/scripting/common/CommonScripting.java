@@ -13,10 +13,12 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.*;
-import sybyline.anduril.extensions.SybylineNetwork;
 import sybyline.anduril.scripting.api.common.*;
 import sybyline.anduril.scripting.client.ClientScripting;
+import sybyline.anduril.scripting.data.ScriptPlayerData;
+import sybyline.anduril.scripting.data.ScriptServerData;
 import sybyline.anduril.scripting.server.ServerScripting;
+import sybyline.anduril.scripting.server.cmd.AndurilCommands;
 import sybyline.anduril.util.Util;
 import sybyline.anduril.util.data.*;
 
@@ -30,10 +32,6 @@ public final class CommonScripting {
 	static {
 		LOGGER.info("Sybyline Custom Scripting has been loaded!");
 	}
-
-	public final SybylineNetwork network = new SybylineNetwork(new ResourceLocation(Util.ANDURIL, "scripting"), Util.ANDURIL, network -> {
-		network.register(S2CSybylineGui.class, S2CSybylineGui::new);
-	});
 
 	public final ICache<UUID, CompoundNBT, ScriptPlayerData> player_data = ICache.files
 		(new ResourceLocation(Util.SYBYLINE, "player_data"), IFormat.NBT, ScriptPlayerData::new, UUID::toString).setVerbosity(true);
@@ -99,11 +97,18 @@ public final class CommonScripting {
 		player_data.setServer(null);
 	}
 
+	public ScriptPlayerData getScriptDataFor(UUID playeruuid) {
+		if (playeruuid == null) {
+			return null;
+		}
+		return this.player_data.getOrCreate(playeruuid);
+	}
+
 	public IScriptPlayer getScriptPlayerFor(UUID playeruuid, String domain) {
 		if (playeruuid == null) {
 			return null;
 		}
-		return this.player_data.getOrCreate(playeruuid).scriptdata(domain);
+		return this.getScriptDataFor(playeruuid).scriptdata(domain);
 	}
 
 	public IScriptPlayer getScriptPlayerFor(PlayerEntity player, String domain) {
@@ -111,7 +116,7 @@ public final class CommonScripting {
 			return null;
 		}
 		if (player instanceof ServerPlayerEntity) {
-			return this.player_data.getOrCreate(PlayerEntity.getUUID(player.getGameProfile())).scriptdata(domain);
+			return this.getScriptDataFor(PlayerEntity.getUUID(player.getGameProfile())).scriptdata(domain);
 		}
 		return null;
 	}

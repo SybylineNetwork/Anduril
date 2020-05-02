@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.function.*;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.item.ItemStack;
+import sybyline.anduril.scripting.api.common.IMCItem;
 import sybyline.anduril.scripting.api.common.IMCResource;
 
 public interface IScriptGui<SubScreen extends FocusableGui & IRenderable> {
@@ -82,19 +82,19 @@ public interface IScriptGui<SubScreen extends FocusableGui & IRenderable> {
 
 	// Item
 
-	public default void draw_item(ItemStack stack, int x, int y) {
+	public default void draw_item(IMCItem stack, int x, int y) {
 		this.draw_item(stack, x, y, null, true);
 	}
 
-	public default void draw_item(ItemStack stack, int x, int y, boolean overlay) {
+	public default void draw_item(IMCItem stack, int x, int y, boolean overlay) {
 		this.draw_item(stack, x, y, null, overlay);
 	}
 
-	public default void draw_item(ItemStack stack, int x, int y, String text) {
+	public default void draw_item(IMCItem stack, int x, int y, String text) {
 		this.draw_item(stack, x, y, text, true);
 	}
 
-	public void draw_item(ItemStack stack, int x, int y, String text, boolean overlay);
+	public void draw_item(IMCItem stack, int x, int y, String text, boolean overlay);
 
 	// Tooltip
 

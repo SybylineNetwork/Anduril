@@ -1,35 +1,66 @@
 {
 	"current": {
+		"common.dual_wield": {
+			"since": "0.0.2",
+			"dev-since": "0.0.1-fix2",
+			"description": "Dual wielding attacks"
+		},
 		"client.guis": {
 			"since": "0.0.0",
+			"dev-since": "0.0.0",
 			"description": "Allows guis and overlays to be defined in resourcepacks"
+		},
+		"client.item_display": {
+			"since": "0.0.1-fix2",
+			"dev-since": "0.0.1-fix1",
+			"description": "Displaying shields on your back or swords on your hip"
 		},
 		"server.commands": {
 			"since": "0.0.0",
+			"dev-since": "0.0.0",
 			"description": "Allows commands to be defined in datapacks"
 		},
 		"server.events": {
 			"since": "0.0.0",
+			"dev-since": "0.0.0",
 			"description": "Allows event handlers to be defined in datapacks"
 		},
 		"server.data": {
 			"since": "0.0.1",
+			"dev-since": "0.0.0",
 			"description": "Allows arbitrary data structures to be constructed easily"
 		},
 		"server.permissions": {
 			"since": "0.0.1",
+			"dev-since": "0.0.0",
 			"description": "Allows player permissions to be configured"
 		}
 	},
 	"wip": {
 		"common.lotr": {
-			"since": "0.0.1",
+			"dev-since": "0.0.1",
 			"description": "Compatibility module with LOTR:Renewed"
+		},
+		"common.build_limit": {
+			"dev-since": "0.0.1-fix2",
+			"description": "Increase the maximum build height"
 		}
 	},
 	"future": {
 		"client.tooltips": {
 			"description": "Allows tooltip additions to be defined in resourcepacks"
+		},
+		"client.keybinds": {
+			"description": "Allows keybind additions to be defined in resourcepacks"
+		},
+		"common.attributes": {
+			"description": "Custom Item attributes"
+		},
+		"common.entity_parts": {
+			"description": "Attack entity models' parts"
+		},
+		"server.names": {
+			"description": "Nicknames, prefixes, and suffixes"
 		}
 	}
 }

@@ -1,7 +1,7 @@
-package sybyline.anduril.scripting.common;
+package sybyline.anduril.scripting.data;
 
 import net.minecraft.nbt.CompoundNBT;
-import sybyline.anduril.scripting.data.ScriptData;
+import sybyline.anduril.scripting.common.ScriptWrapper;
 import sybyline.anduril.scripting.server.ScriptServer;
 import sybyline.anduril.util.data.ICachable;
 

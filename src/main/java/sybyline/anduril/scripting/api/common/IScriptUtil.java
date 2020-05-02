@@ -1,7 +1,6 @@
 package sybyline.anduril.scripting.api.common;
 
 import java.util.concurrent.Callable;
-import net.minecraft.item.ItemStack;
 
 public interface IScriptUtil {
 
@@ -39,10 +38,10 @@ public interface IScriptUtil {
 
 	public IMCResource new_resource(String domain, String path);
 
-	public default ItemStack new_item(String item) {
+	public default IMCItem new_item(String item) {
 		return this.new_item(item, 1);
 	}
 
-	public ItemStack new_item(String item, int size);
+	public IMCItem new_item(String item, int size);
 
 }

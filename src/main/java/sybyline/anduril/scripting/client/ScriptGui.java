@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import org.lwjgl.opengl.GL11;
 import com.google.common.collect.Sets;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.screen.*;
@@ -19,9 +19,8 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.StringTextComponent;
 import sybyline.anduril.scripting.api.client.*;
-import sybyline.anduril.scripting.api.common.IMCResource;
-import sybyline.anduril.scripting.common.CommonScripting;
-import sybyline.anduril.scripting.common.MCResource;
+import sybyline.anduril.scripting.api.common.*;
+import sybyline.anduril.scripting.common.*;
 import sybyline.anduril.util.Util;
 
 @SuppressWarnings("resource")
@@ -58,12 +57,13 @@ public final class ScriptGui<SubScreen extends FocusableGui & IRenderable> imple
 		this.scriptParent.getMinecraft().getTextureManager().bindTexture(((MCResource)resource).location);
 	}
 
-	public void draw_item(ItemStack stack, int x, int y, String text, boolean overlay) {
+	public void draw_item(IMCItem stack, int x, int y, String text, boolean overlay) {
+		ItemStack mcstack = ((MCItem)stack).__stack;
 		if (overlay) {
-			this.scriptParent.getItemRenderer().renderItemOverlayIntoGUI(this.font(), stack, x, y, text);
+			this.scriptParent.getItemRenderer().renderItemOverlayIntoGUI(this.font(), mcstack, x, y, text);
 		}
 		RenderHelper.enableStandardItemLighting();
-		this.scriptParent.getItemRenderer().renderItemAndEffectIntoGUI(stack, x, y);
+		this.scriptParent.getItemRenderer().renderItemAndEffectIntoGUI(mcstack, x, y);
 		RenderHelper.disableStandardItemLighting();
 	}
 
@@ -92,12 +92,12 @@ public final class ScriptGui<SubScreen extends FocusableGui & IRenderable> imple
 
 	public void draw_tooltip(String msg, int x, int y) {
 		this.scriptParent.renderTooltip(msg, x, y);
-        GlStateManager.disableLighting();
+        RenderSystem.disableLighting();
 	}
 
 	public void draw_tooltip(List<String> msg, int x, int y) {
 		this.scriptParent.renderTooltip(msg, x, y, this.font());
-        GlStateManager.disableLighting();
+        RenderSystem.disableLighting();
 	}
 
 	public void message_print(String message, boolean chat) {
@@ -185,12 +185,12 @@ public final class ScriptGui<SubScreen extends FocusableGui & IRenderable> imple
 
 	// For rendering text, which doesn't respect the current blitOffset
 	public void depth_pushGL() {
-		GlStateManager.translatef(0, 0, this.scriptParent.getBlitOffset());
+        RenderSystem.translatef(0, 0, this.scriptParent.getBlitOffset());
 	}
 
 	// For rendering text, which doesn't respect the current blitOffset
 	public void depth_popGL() {
-		GlStateManager.translatef(0, 0, -this.scriptParent.getBlitOffset());
+		RenderSystem.translatef(0, 0, -this.scriptParent.getBlitOffset());
 	}
 
 	public void draw_pointSmall(int x, int y, int color) {

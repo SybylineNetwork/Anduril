@@ -42,7 +42,7 @@ public class ServerCommands {
 			command.domain = location.getNamespace();
 			CommonScripting.INSTANCE.println_debug("Building script command: " + location);
 			LiteralArgumentBuilder<CommandSource> literal = Commands.literal(command.name);
-			literal = command.setupWithContext(literal);
+			command.setupWithContext(literal);
 			dispatcher.register(literal);
 			dynamic_wrappers.put(command.name, command);
 		} catch(Exception e) {

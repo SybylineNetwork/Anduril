@@ -1,13 +1,11 @@
 package sybyline.anduril.scripting.server;
 
 import java.util.UUID;
-
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.ImmutableStringReader;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandSource;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -19,8 +17,6 @@ import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.server.permission.PermissionAPI;
-import net.minecraftforge.server.permission.context.*;
-import sybyline.anduril.scripting.api.server.IPermission;
 import sybyline.anduril.scripting.server.cmd.ServerCommands;
 import sybyline.anduril.scripting.server.events.ServerEvents;
 
@@ -54,16 +50,6 @@ public final class ServerScripting {
 		return new GameProfile(uuid, "");
 	}
 
-	public boolean hasPermission(GameProfile profile, IPermission permission) {
-		return hasPermission(profile, permission, new Context());
-	}
-
-	private boolean hasPermission(GameProfile profile, IPermission permission, IContext context) {
-		return PermissionAPI.hasPermission(profile, permission.key(), context)
-			? true
-			: permission.children().stream().anyMatch(child -> hasPermission(profile, child, context));
-	}
-
 	@SubscribeEvent
 	void onCommand(CommandEvent event) {
 		ParseResults<CommandSource> parse = event.getParseResults();
@@ -75,12 +61,14 @@ public final class ServerScripting {
 				char peek = reader.peek();
 				if (peek == '/') reader.skip();
 				String command = reader.readUnquotedString();
-				if (!PermissionAPI.hasPermission(player, "command.".concat(command))) {
+				if (!PermissionAPI.hasPermission(player, "command." + command)) {
 					event.setException(new CommandException(new StringTextComponent("You do not have permission to use the command '/"+command+"'.")));
 				}
 			}
 		} catch(CommandSyntaxException e) {
 			// Pass if not a player
+		} catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 
