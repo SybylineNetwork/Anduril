@@ -59,6 +59,9 @@
 		"common.entity_parts": {
 			"description": "Attack entity models' parts"
 		},
+		"common.magic": {
+			"description": "Spells"
+		},
 		"server.names": {
 			"description": "Nicknames, prefixes, and suffixes"
 		}

@@ -60,8 +60,8 @@ public final class DualWield {
 	private int ticksSinceLastSwingOffhand = 0;
 	private ItemStack itemStackOffHand = ItemStack.EMPTY;
 
-	public final int staminaMax = 50;
-	public int staminaCurrent = 50;
+	public final int staminaMax = 100;
+	public int staminaCurrent = 100;
 
 	public void tick() {
 		if (staminaCurrent < staminaMax) {
@@ -114,11 +114,11 @@ public final class DualWield {
 		if (item.isShield(stack, living)) {
 			return 15;
 		} else if (item instanceof AxeItem) {
-			return 50;
+			return 35;
 		} else if (item instanceof PickaxeItem) {
-			return 40;
+			return 45;
 		} else if (item instanceof ShovelItem) {
-			return 30;
+			return 40;
 		} else if (item instanceof SwordItem) {
 			return 20;
 		} else if (item instanceof HoeItem) {
@@ -126,6 +126,9 @@ public final class DualWield {
 		} else {
 			return 5;
 		}
+		// hulking/knockback affects item weight
+		
+		// Rings -> multi-use potions, give abilities to weapons
 	}
 
 	public float tryConsumeStamina(int amount) {
@@ -136,10 +139,10 @@ public final class DualWield {
 			int result = staminaCurrent - amount;
 			if (result > -staminaMax/2) {
 				staminaCurrent = result;
-				return -0.33F;
+				return -0.50F;
 			} else if (result > -staminaMax) {
 				staminaCurrent = result;
-				return -0.67F;
+				return -0.75F;
 			} else {
 				return -1.10F; // Ensure that nothing actually happens
 			}
@@ -376,14 +379,14 @@ public final class DualWield {
 						gui.blit((scaledWidth - i) / 2, (scaledHeight - i) / 2, 0, 0, i, i);
 						RenderSystem.color3f(1.00F, 1.00F, 1.00F);
 						if (mc.gameSettings.attackIndicator == AttackIndicatorStatus.CROSSHAIR) {
-							float coolMain = mc.player.getCooledAttackStrength(0.0F);
+							float coolMain = mc.player.getCooledAttackStrength(partialTicks);
 							boolean flagMain = false;
 							if (mc.pointedEntity != null && mc.pointedEntity instanceof LivingEntity && coolMain >= 1.0F) {
 								flagMain = mc.player.getCooldownPeriod() > 5.0F;
 								flagMain = flagMain & mc.pointedEntity.isAlive();
 							}
 							DualWield dw = DualWield.of(mc.player);
-							float coolOff = dw.getCooledAttackStrengthOffhand(0.0F);
+							float coolOff = dw.getCooledAttackStrengthOffhand(partialTicks);
 							boolean flagOff = false;
 							if (pointedEntityOffhand != null && pointedEntityOffhand instanceof LivingEntity && coolOff >= 1.0F) {
 								flagOff = dw.getCooldownPeriodOffhand() > 5.0F;
