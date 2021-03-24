@@ -24,13 +24,13 @@ public class CustomRecipeSerializer<Inv extends IInventory, T extends CustomReci
 
 	@Override
 	public T read(ResourceLocation recipeId, PacketBuffer buffer) {
-		JsonObject object = sandbox ? Util.IO.readJsonFromBuffer(buffer) : new JsonObject();
+		JsonObject object = sandbox ? new JsonObject() : Util.IO.readJsonFromBuffer(buffer);
 		return this.read(recipeId, object);
 	}
 
 	@Override
 	public void write(PacketBuffer buffer, T recipe) {
-		if (sandbox) Util.IO.writeJsonToBuffer(recipe.getJson(), buffer);
+		if (!sandbox) Util.IO.writeJsonToBuffer(recipe.getJson(), buffer);
 	}
 
 	public boolean sandbox = false;

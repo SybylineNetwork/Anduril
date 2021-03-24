@@ -1,14 +1,22 @@
 package sybyline.anduril.scripting.server.events;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
+import sybyline.anduril.common.Anduril;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
-import sybyline.anduril.scripting.common.*;
+import sybyline.anduril.scripting.common.CommonScripting;
+import sybyline.anduril.scripting.common.ScriptWrapper;
 import sybyline.anduril.util.data.IFormat;
+import sybyline.satiafenris.ene.Subclasser;
 
 public class ScriptEventWrapper extends ScriptWrapper<Void> {
 
@@ -27,6 +35,8 @@ public class ScriptEventWrapper extends ScriptWrapper<Void> {
 
 	final void unlisten() {
 		MinecraftForge.EVENT_BUS.unregister(this);
+		generics.clear();
+		events.clear();
 	}
 
 	@Override
@@ -46,6 +56,46 @@ public class ScriptEventWrapper extends ScriptWrapper<Void> {
 	final ScriptEventList<Consumer<IScriptPlayer>> listen_playerJoin = new ScriptEventList<Consumer<IScriptPlayer>>();
 	final ScriptEventList<Consumer<IScriptPlayer>> listen_playerTick = new ScriptEventList<Consumer<IScriptPlayer>>();
 	final ScriptEventList<Consumer<IScriptPlayer>> listen_playerLeave = new ScriptEventList<Consumer<IScriptPlayer>>();
+	final Map<String, Consumer<? extends Event>> generics = new HashMap<>();
+	final Map<Class<? extends Event>, List<Consumer<Event>>> events = new HashMap<>();
+
+	public void registerGeneric(String id, Object forgeEventClass, Consumer<Event> handler) {
+		if (id == null) {
+			Anduril.LOGGER.error(id + ": ID was null!", new RuntimeException());
+			return;
+		}
+		if (forgeEventClass == null) {
+			Anduril.LOGGER.error(id + ": Event class was null!", new RuntimeException());
+			return;
+		}
+		if (handler == null) {
+			Anduril.LOGGER.error(id + ": Handler was null!", new RuntimeException());
+			return;
+		}
+		if (generics.containsKey(id)) {
+			Anduril.LOGGER.error(id + ": Already registered a handler with this id!", new RuntimeException());
+			return;
+		}
+		Class<? extends Event> eventClass;
+		try {
+			eventClass = Subclasser.classify(forgeEventClass).asSubclass(Event.class);
+		} catch(Exception ex) {
+			Anduril.LOGGER.error(id + ": Not a valid Event class: '"+forgeEventClass+"'", ex);
+			ex.printStackTrace();
+			return;
+		}
+		events.computeIfAbsent(eventClass, __ -> new ArrayList<>()).add(handler);
+	}
+
+	@SubscribeEvent
+	void event_all(Event event) {
+		Class<?> clazz = event.getClass();
+		do {
+			List<Consumer<Event>> list = events.get(clazz);
+			if (list !=  null) list.forEach(c -> c.accept(event));
+			clazz = clazz.getSuperclass();
+		} while (clazz != Object.class && clazz != null);
+	}
 
 	@SubscribeEvent
 	void event_playerJoin(PlayerEvent.PlayerLoggedInEvent event) {

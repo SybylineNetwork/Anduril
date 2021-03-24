@@ -1,0 +1,9 @@
+{
+	"location": "anduril:hammer",
+	"damage": 7,
+	"speed": -3.4,
+	"reach": 1.0,
+	"weight": 55,
+	"durability": 0,
+	"damage_type": "bludgeon"
+}

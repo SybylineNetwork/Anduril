@@ -20,6 +20,7 @@ public class FileResourceContext implements ResourceContext {
 		this.project = project;
 		this.version = version;
 		this.internal_cache = new HashMap<String, Resource>();
+		this.extensions = new HashMap<String, Object>();
 		this.internal_hash = ((((long)domain.hashCode()) << 32) ^ (((long)project.hashCode()) << 32)) | (((long)version.hashCode()) << 00);
 		this.internal_verbose = false;
 		this.internal_download_all = false;
@@ -93,6 +94,7 @@ public class FileResourceContext implements ResourceContext {
 	public final String version;
 
 	private final Map<String, Resource> internal_cache;
+	private final Map<String, Object> extensions;
 	final long internal_hash;
 	private boolean internal_verbose;
 	private boolean internal_download_all;
@@ -120,8 +122,17 @@ public class FileResourceContext implements ResourceContext {
 		return internal_cache.computeIfAbsent(id, _id -> new FileResource(this, _id));
 	}
 
+	public Set<String> getAllResources() {
+		return internal_cache.keySet();
+	}
+
 	public long getRemoteVersion() {
 		return internal_repository_version;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T getExtension(ResourceExtension<T> ext) {
+		return (T) extensions.computeIfAbsent(ext.id(), id -> ext.create(this));
 	}
 
 }

@@ -13,18 +13,19 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.*;
+import sybyline.anduril.common.AndurilCommands;
 import sybyline.anduril.scripting.api.common.*;
 import sybyline.anduril.scripting.client.ClientScripting;
-import sybyline.anduril.scripting.data.ScriptPlayerData;
-import sybyline.anduril.scripting.data.ScriptServerData;
+import sybyline.anduril.scripting.nashorn.DefaultMethodRemapper;
 import sybyline.anduril.scripting.server.ServerScripting;
-import sybyline.anduril.scripting.server.cmd.AndurilCommands;
 import sybyline.anduril.util.Util;
 import sybyline.anduril.util.data.*;
 
 public final class CommonScripting {
 
-	private CommonScripting() {}
+	private CommonScripting() {
+		DefaultMethodRemapper.registerExtension(CommonScriptingExtensions.class);
+	}
 
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final CommonScripting INSTANCE = new CommonScripting();
@@ -37,7 +38,7 @@ public final class CommonScripting {
 		(new ResourceLocation(Util.SYBYLINE, "player_data"), IFormat.NBT, ScriptPlayerData::new, UUID::toString).setVerbosity(true);
 
 	public final ICache<String, CompoundNBT, ScriptServerData> server_data = ICache.files
-		(new ResourceLocation(Util.SYBYLINE, "server_data"), IFormat.NBT, ScriptServerData::new, String::valueOf).setVerbosity(true);
+		(new ResourceLocation(Util.SYBYLINE, "server_data"), IFormat.NBT, ScriptServerData::new).setVerbosity(true);
 
 	private Consumer<String> println_debug = LOGGER::debug;
 
@@ -72,6 +73,7 @@ public final class CommonScripting {
 		
 	}
 
+	@SuppressWarnings("deprecation")
 	public void gameStart(FMLClientSetupEvent event) {
 		DistExecutor.runWhenOn(Dist.CLIENT, ()->()->{
 			ClientScripting.INSTANCE.setup(event);
@@ -95,6 +97,7 @@ public final class CommonScripting {
 
 	public void serverStop(FMLServerStoppingEvent event) {
 		player_data.setServer(null);
+		ServerScripting.INSTANCE.cleanup(event);
 	}
 
 	public ScriptPlayerData getScriptDataFor(UUID playeruuid) {

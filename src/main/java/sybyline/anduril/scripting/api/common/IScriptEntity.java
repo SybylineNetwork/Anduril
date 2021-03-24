@@ -2,14 +2,15 @@ package sybyline.anduril.scripting.api.common;
 
 import java.util.function.Consumer;
 
-import sybyline.anduril.scripting.api.data.IScriptData;
-import sybyline.anduril.util.math.Vector;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.math.Vec3d;
 import sybyline.satiafenris.ene.ScriptBridge;
 import sybyline.satiafenris.ene.ScriptRuntimeException;
 
 public interface IScriptEntity extends ScriptBridge {
 
-	public IScriptData data();
+	public CompoundNBT data();
 
 	// Casting
 
@@ -41,14 +42,16 @@ public interface IScriptEntity extends ScriptBridge {
 
 	// Positional
 
-	public Vector pos();
+	public Vec3d pos();
 
-	public void pos(Vector position);
+	public void pos(Vec3d position);
 
-	public void move(Vector position);
+	public void move(Vec3d position);
 
-	public Vector look();
+	public Vec3d look();
 
-	public void look(Vector look);
+	public void look(Vec3d look);
+
+	public Entity getRawEntity();
 
 }

@@ -1,0 +1,22 @@
+{
+	"type": "anduril:smithing",
+	"pattern": [
+		"X",
+		"#",
+		"#"
+	],
+	"key": {
+		"#": {
+			"item": "minecraft:stick"
+		},
+		"X": {
+			"item": "minecraft:gold_ingot"
+		}
+	},
+	"temperature": 1337,
+	"hits": 20,
+	"hammer_type": "blacksmith",
+	"result": {
+		"item": "minecraft:golden_shovel"
+	}
+}

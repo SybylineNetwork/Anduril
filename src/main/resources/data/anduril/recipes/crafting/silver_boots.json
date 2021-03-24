@@ -1,0 +1,18 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"I I",
+		"I I"
+	],
+	"key": {
+		"I": {
+			"item": "anduril:silver_ingot"
+		}
+	},
+	"result": {
+		"item": "anduril:boots",
+		"nbt": {
+			"ArmorSet": "anduril:silver"
+		}
+	}
+}

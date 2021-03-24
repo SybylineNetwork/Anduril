@@ -12,6 +12,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.network.NetworkEvent.Context;
 import sybyline.anduril.scripting.common.CommonScripting;
 import sybyline.anduril.scripting.common.ScriptUtil;
 import sybyline.anduril.scripting.common.ScriptWrapperSimple;
@@ -146,5 +147,9 @@ public final class ClientScripting {
 		}
 		return null;
 	}
+
+	public void onDynamic(Context ctx, ResourceLocation id, CompoundNBT data) {
+		
+	};
 
 }

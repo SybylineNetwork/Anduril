@@ -1,0 +1,62 @@
+package siege.common.siege.command.old;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.google.common.collect.Lists;
+import net.minecraft.command.CommandSource;
+import net.minecraft.util.text.StringTextComponent;
+import siege.common.mode.Mode;
+import siege.common.siege.Siege;
+import siege.common.siege.SiegeDatabase;
+import siege.common.siege.command.CommandBase;
+import siege.common.siege.command.SiegeCommands;
+
+@Deprecated
+public class CommandSiegeList extends CommandBase {
+
+	@Override
+	public String getCommandName() {
+		return "siege_list";
+	}
+
+	@Override
+	public String getCommandUsage(CommandSource sender) {
+		return "/siege_list <active|inavtive|deleted> [<mode>]";
+	}
+
+	@Override
+	public void processCommand(CommandSource sender, String[] args) {
+		if(args.length < 1) throw SiegeCommands.runtime("Not enough args!");
+		String activity = args[0];
+		if(!(activity.equals("active") || activity.equals("inactive") || activity.equals("deleted"))) throw SiegeCommands.runtime("That is not a state a siege can be in!");
+		String mode = args.length >= 2 ? args[1] : null;
+		if(!(mode == null ? true : Lists.newArrayList(Mode.values()).contains(mode))) throw SiegeCommands.runtime("That is not a gameplay mode a siege can have!");
+		List<String> allOfType = Lists.newArrayList();
+		for(Siege siege : SiegeDatabase.getAllSieges()) {
+			if(siege.isActive() && activity.equals("active")) {
+				allOfType.add(siege.getSiegeName());
+			} else if(siege.isDeleted() && activity.equals("deleted")) {
+				allOfType.add(siege.getSiegeName());
+			} else if(!siege.isActive() && activity.equals("inactive")) {
+				allOfType.add(siege.getSiegeName());
+			}
+		}
+		if(allOfType.size() == 0) {
+			sender.sendFeedback(new StringTextComponent("No '" + activity + (mode == null ? "" : (", " + mode)) + "' sieges."), true);
+		} else {
+			sender.sendFeedback(new StringTextComponent("Sieges of type '" + activity + (mode == null ? "" : (", " + mode)) + "': " + joinNiceStringFromCollection(allOfType)), true);
+		}
+	}
+
+	@Override
+    public List<String> addTabCompletionOptions(CommandSource sender, String[] args) {
+		if(args.length == 1) {
+			return getListOfStringsFromIterableMatchingLastWord(args, SiegeDatabase.getAllSiegeNames());
+		}
+		if(args.length == 2) {
+			return getListOfStringsMatchingLastWord(args, Mode.values());
+		}
+		List<String> ret = new ArrayList<>(); return ret;
+	}
+
+}

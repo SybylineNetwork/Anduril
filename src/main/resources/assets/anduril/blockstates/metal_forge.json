@@ -1,0 +1,12 @@
+{
+    "variants": {
+        "facing=north,lit=false": { "model": "anduril:block/metal_forge_north"},
+        "facing=south,lit=false": { "model": "anduril:block/metal_forge_south", "y": 180, "uvlock": true },
+        "facing=west,lit=false": { "model": "anduril:block/metal_forge_west", "y": 270, "uvlock": true },
+        "facing=east,lit=false": { "model": "anduril:block/metal_forge_east", "y": 90, "uvlock": true },
+        "facing=north,lit=true": { "model": "anduril:block/metal_forge_north"},
+        "facing=south,lit=true": { "model": "anduril:block/metal_forge_south", "y": 180, "uvlock": true },
+        "facing=west,lit=true": { "model": "anduril:block/metal_forge_west", "y": 270, "uvlock": true },
+        "facing=east,lit=true": { "model": "anduril:block/metal_forge_east", "y": 90, "uvlock": true }
+    }
+}

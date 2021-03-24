@@ -1,0 +1,22 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"SLS",
+		"LNL",
+		"LLL"
+	],
+	"key": {
+		"S": {
+			"item": "minecraft:string"
+		},
+		"L": {
+			"item": "minecraft:leather"
+		},
+		"N": {
+			"item": "minecraft:nether_star"
+		}
+	},
+	"result": {
+		"item": "anduril:sack"
+	}
+}

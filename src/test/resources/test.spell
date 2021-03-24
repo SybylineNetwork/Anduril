@@ -1,0 +1,27 @@
+name [
+  Fireball
+]
+projectile [
+  speed 10
+  impact {
+    explode [
+      fire
+      strength 3
+    ]
+    area [
+      radius 4
+    ]{
+      hurt 2
+    }
+  }
+]
+cast {
+  heal 5
+}
+
+
+name[Retrieve]projectile[speed 10 impact{area[radius 3]{pull}}]
+
+/cast name[M]cast{cone{mark "TestMark"}}
+
+/cast name[F]cast{find[mark "TestMark"]{explode}}

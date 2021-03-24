@@ -25,4 +25,16 @@ public class Box<Thing> implements Supplier<Thing>, Consumer<Thing> {
 		return thing;
 	}
 
+	public Thing set(Thing thing) {
+		return this.thing = thing;
+	}
+
+	public Thing swap(Thing thing) {
+		try {
+			return this.thing;
+		} finally {
+			this.thing = thing;
+		}
+	}
+
 }

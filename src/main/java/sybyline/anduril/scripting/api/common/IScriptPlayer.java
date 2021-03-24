@@ -2,6 +2,7 @@ package sybyline.anduril.scripting.api.common;
 
 import java.util.UUID;
 
+import net.minecraft.entity.player.PlayerEntity;
 import sybyline.anduril.scripting.api.server.IPermission;
 
 public interface IScriptPlayer extends IScriptLiving {
@@ -21,5 +22,7 @@ public interface IScriptPlayer extends IScriptLiving {
 	public void grantPermission(IPermission permission);
 
 	public void revokePermission(IPermission permission);
+
+	public PlayerEntity getRawPlayer();
 
 }

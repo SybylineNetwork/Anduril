@@ -14,6 +14,10 @@ public final class Noop {
 		return (one) -> {};
 	}
 
+	public static final DoubleConsumer acceptDouble() {
+		return (one) -> {};
+	}
+
 	public static final <T, U> BiConsumer<T, U> biaccept() {
 		return (one, two) -> {};
 	}
@@ -24,6 +28,18 @@ public final class Noop {
 
 	public static final VarConsumer varaccept() {
 		return (args) -> {};
+	}
+
+	public static <T> Supplier<T> constant(T value) {
+		return () -> value;
+	}
+
+	public static <T> Predicate<T> truth() {
+		return __ -> true;
+	}
+
+	public static <T> Predicate<T> falsity() {
+		return __ -> false;
 	}
 
 }

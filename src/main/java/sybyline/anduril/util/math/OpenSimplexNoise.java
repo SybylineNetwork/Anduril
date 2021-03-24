@@ -40,6 +40,10 @@ public class OpenSimplexNoise {
 		this(DEFAULT_SEED);
 	}
 	
+	public OpenSimplexNoise(String seed) {
+		this(DEFAULT_SEED ^ seed.hashCode());
+	}
+	
 	public OpenSimplexNoise(short[] perm) {
 		this.perm = perm;
 		permGradIndex3D = new short[256];

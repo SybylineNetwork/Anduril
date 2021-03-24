@@ -1,0 +1,34 @@
+{
+  "parent": "anduril:anduril/combat/craft_implement",
+  "display": {
+    "icon": {
+      "item": "anduril:papyrus"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.cast_spells.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.cast_spells.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "cast": {
+      "trigger": "anduril:spells_cast",
+      "conditions": {
+        "stat": "anduril:spells_cast",
+        "bound": {
+          "min": 1
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "cast"
+    ]
+  ]
+}

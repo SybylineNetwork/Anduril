@@ -1,0 +1,141 @@
+package siege.common.siege.command.old;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.StringTextComponent;
+import siege.common.siege.command.SiegeCommands;
+
+@Deprecated
+public abstract class CommandBase {
+
+	public final LiteralArgumentBuilder<CommandSource> buildCompatibility() {
+		return Commands.literal(getCommandName())
+		.requires(this::canCommandSenderUseCommand)
+		.executes(context -> {context.getSource().sendFeedback(new StringTextComponent(getCommandUsage(context.getSource()) + " *Tab completion is currently broken"), true);return Command.SINGLE_SUCCESS;})
+		.then(Commands.argument("args", StringArgumentType.greedyString())
+			.executes(context -> {
+				CommandSource sender = context.getSource();
+				try {
+					String[] args = StringArgumentType.getString(context, "args").split(" ");
+					this.processCommand(sender, args);
+					return Command.SINGLE_SUCCESS;
+				} catch(Exception e) {
+					sender.sendErrorMessage(new StringTextComponent(e.getMessage()));
+					return -1;
+				}
+			})
+		);
+	}
+
+	public abstract String getCommandName();
+
+	public int getRequiredPermissionLevel() {
+		return 4;
+	}
+
+	public String getCommandUsage(CommandSource sender) {
+		return "/" + getCommandName();
+	}
+
+	public abstract void processCommand(CommandSource sender, String[] args);
+
+	public List<String> addTabCompletionOptions(CommandSource sender, String[] args) {
+		return Collections.emptyList();
+	}
+
+	public boolean canCommandSenderUseCommand(CommandSource sender) {
+		return sender.hasPermissionLevel(getRequiredPermissionLevel());
+	}
+
+	public static void func_152373_a(CommandSource source, CommandBase thiz, String message, Object... objects) {
+		SiegeCommands.feedback(source, String.format(message, objects));
+	}
+	
+	public static ServerPlayerEntity getCommandSenderAsPlayer(CommandSource sender) {
+		if (sender.getEntity() != null && sender.getEntity() instanceof ServerPlayerEntity)
+			return (ServerPlayerEntity)sender.getEntity();
+		throw SiegeCommands.runtime("Sender must be a player");
+	}
+
+	public static List<String> getListOfStringsFromIterableMatchingLastWord(String[] args, Iterable<String> suggestions) {
+		return getListOfStringsFromStreamMatchingWord(args[args.length - 1], StreamSupport.stream(suggestions.spliterator(), false));
+	}
+
+	public static List<String> getListOfStringsMatchingLastWord(String[] args, String... suggestions) {
+		return getListOfStringsFromStreamMatchingWord(args[args.length - 1], Arrays.stream(suggestions));
+	}
+
+	public static List<String> getListOfStringsFromStreamMatchingWord(String last, Stream<String> suggestions) {
+		return suggestions.filter(suggestion -> suggestion.startsWith(last)).collect(Collectors.toList());
+	}
+
+	public static String joinNiceStringFromCollection(Collection<String> strings) {
+		String[] array = strings.stream().toArray(String[]::new);
+		int length = array.length;
+		switch(length) {
+		case 0:
+			return "";
+		case 1:
+			return array[0];
+		case 2:
+			return array[0] + " and " + array[1];
+		default:
+			StringBuilder ret = new StringBuilder();
+			for (int i = 0; i < length - 2; i++) {
+				ret = ret.append(array[i]).append(", ");
+			}
+			return ret.append(array[length - 2]).append(", and ").append(array[length - 1]).toString();
+		}
+	}
+
+	public static int parseInt(CommandSource sender, String string, int relative) {
+		try {
+			return string.startsWith("~")
+				? Integer.parseInt(string) + relative
+				: Integer.parseInt(string);
+		} catch(Exception e) {
+			throw SiegeCommands.runtime("'%s' is not an integer", string);
+		}
+	}
+
+	public static int parseIntWithMin(CommandSource sender, String string, int relative, int min) {
+		int val = parseInt(sender, string, relative);
+		if (val < min)
+			throw SiegeCommands.runtime("'%s' is greater than the minimum %s", string, min);
+		return val;
+	}
+
+	public static int parseIntBounded(CommandSource sender, String string, int relative, int min, int max) {
+		int val = parseIntWithMin(sender, string, relative, min);
+		if (val > max)
+			throw SiegeCommands.runtime("'%s' is greater than the maximum %s", string, max);
+		return val;
+	}
+
+	public static double func_110666_a(CommandSource sender, double relative, String string) {
+		try {
+			return string.startsWith("~")
+				? Double.parseDouble(string.substring(1)) + relative
+				: Double.parseDouble(string);
+		} catch(Exception e) {
+			throw SiegeCommands.runtime("'%s' is not an double", string);
+		}
+	}
+
+	public static ServerPlayerEntity getPlayer(CommandSource sender, String string) {
+		return sender.getServer().getPlayerList().getPlayerByUsername(string);
+	}
+
+}

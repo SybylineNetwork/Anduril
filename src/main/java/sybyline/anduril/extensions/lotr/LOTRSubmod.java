@@ -4,7 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import sybyline.anduril.extensions.Submod;
-import sybyline.anduril.extensions.annotation.SubmodMarker;
+import sybyline.anduril.extensions.SubmodMarker;
 
 @SubmodMarker("lotr:anduril")
 public class LOTRSubmod extends Submod {

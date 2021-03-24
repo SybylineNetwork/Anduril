@@ -1,0 +1,20 @@
+{
+  "location": "anduril:wood",
+  "reduction": 0.75,
+  "percent": 50.0,
+  "enchantability": 15,
+  "durability": 115,
+  "efficacy": {
+  	"bludgeon": 0.6,
+  	"slash": 0.7,
+  	"pierce": 0.6,
+  	"tear": 0.8,
+  	"heat": 0.2,
+  	"cold": 0.2,
+  	"electric": 0.3,
+  	"magic": 0.2
+  },
+  "slots": [
+  	"scabbard"
+  ]
+}

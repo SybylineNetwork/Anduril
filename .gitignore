@@ -23,3 +23,11 @@ run
 
 # Files from Forge MDK
 forge*changelog.txt
+
+# anduril
+libs
+.compiler
+logs
+*.log
+*.log.gz
+sybyline

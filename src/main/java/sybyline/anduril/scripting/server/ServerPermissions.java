@@ -10,7 +10,7 @@ import net.minecraftforge.server.permission.context.IContext;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
 import sybyline.anduril.scripting.api.server.*;
 import sybyline.anduril.scripting.common.CommonScripting;
-import sybyline.anduril.scripting.data.ScriptServerData;
+import sybyline.anduril.scripting.common.ScriptServerData;
 
 public class ServerPermissions implements IPermissionHandler {
 

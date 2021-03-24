@@ -15,23 +15,30 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.*;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.*;
 import net.minecraftforge.client.event.*;
-import net.minecraftforge.coremod.api.ASMAPI;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import sybyline.anduril.Anduril;
-import sybyline.anduril.AndurilGameRules;
-import sybyline.anduril.extensions.client.SubmodClient;
-import sybyline.anduril.network.C2SAttackEntity;
+import sybyline.anduril.client.SubmodClient;
+import sybyline.anduril.common.AndurilGameRules;
+import sybyline.anduril.common.AndurilTags;
+import sybyline.anduril.common.Proxy;
+import sybyline.anduril.common.modelbb.ModelBB.ModelBBTraceResult;
+import sybyline.anduril.common.network.C2SAttackEntity;
+import sybyline.anduril.common.network.C2SAttackVector;
+import sybyline.anduril.extensions.forge.IAndurilItem;
+import sybyline.anduril.extensions.forge.IAndurilItemStack;
 import sybyline.anduril.util.math.Interpolation;
 import sybyline.anduril.util.rtc.*;
 
@@ -39,16 +46,17 @@ import sybyline.anduril.util.rtc.*;
 public final class DualWield {
 
 	private static final FieldWrapper<DualWield> anduril_dual_wield = FieldWrapper.of(LivingEntity.class, "anduril_dual_wield");
-	private static final FieldWrapper<Integer> ticksSinceLastSwing = FieldWrapper.of(LivingEntity.class, ASMAPI.mapField("field_184617_aD"));
+	private static final FieldWrapper<Integer> ticksSinceLastSwing = FieldWrapper.of(LivingEntity.class, "field_184617_aD");
 
+	public static final UUID PROFICIENCY_UUID = UUID.fromString("c88de270-f247-4dc0-bd2f-c12a9c8229e6");
+	public static final UUID ATTUNEMENT_UUID = UUID.fromString("95f6ac90-285a-4a8f-b925-d45a129301d0");
 	public static final UUID STAMINA_UUID = UUID.fromString("9ee034b4-3f19-430f-8742-5e27cfac591d");
 	public static final UUID WEIGHT_UUID = UUID.fromString("fe7779a3-5e8c-426d-bda1-a050ee2e42df");
 
 	public static DualWield of(LivingEntity player) {
 		DualWield ret = anduril_dual_wield.get(player);
-		if (ret == null) {
+		if (ret == null)
 			anduril_dual_wield.set(player, ret = new DualWield(player));
-		}
 		return ret;
 	}
 
@@ -61,11 +69,29 @@ public final class DualWield {
 	private ItemStack itemStackOffHand = ItemStack.EMPTY;
 
 	public final int staminaMax = 100;
+	public final int staminaMin = -100;
 	public int staminaCurrent = 100;
 
+	public Vec3d weaponDrag = Vec3d.ZERO;
+	public Vec3d weaponDragPrev = Vec3d.ZERO;
+	public Vec3d weaponDragPos = Vec3d.ZERO;
+
+	public Vec3d weaponDragLerp(float partialTicks) {
+		return Interpolation.linear(partialTicks, weaponDragPos, weaponDrag.subtract(weaponDragPrev));
+	}
+
 	public void tick() {
+		if (living.world.isRemote) {
+		Vec3d diff = weaponDrag.subtract(weaponDragPrev);
+//			weaponDragPos = Interpolation.linear(Math.atan(diff.lengthSquared())*0.3D+0.1D, weaponDragPos, diff);
+			weaponDragPos = diff;
+			weaponDragPrev = Interpolation.linear(0.2D + Math.atan(diff.length()) * 1.5D, weaponDragPrev, weaponDrag);
+			weaponDrag = living.getLook(3.0F);
+		}
 		if (staminaCurrent < staminaMax) {
 			staminaCurrent++;
+		} else {
+			staminaCurrent = staminaMax;
 		}
 		++this.ticksSinceLastSwingOffhand;
 		ItemStack mainHand = living.getHeldItemMainhand();
@@ -76,8 +102,8 @@ public final class DualWield {
 			}
 			itemStackOffHand = offHand.copy();
 		}
-		int mainWeight = getItemWeight(mainHand);
-		int offWeight = getItemWeight(offHand);
+		int mainWeight = IAndurilItem.of(mainHand.getItem()).getItemWeight(mainHand, living);
+		int offWeight = IAndurilItem.of(offHand.getItem()).getItemWeight(offHand, living);
 		float overWeight = Float.NaN;
 		if (mainWeight != 1 && offWeight != 1) {
 			int totalweight = mainWeight + offWeight;
@@ -93,7 +119,7 @@ public final class DualWield {
 		}
 		IAttributeInstance attackSpeed = living.getAttribute(SharedMonsterAttributes.ATTACK_SPEED);
 		attackSpeed.removeModifier(WEIGHT_UUID);
-		if (!Float.isNaN(overWeight)) {
+		if (Float.isFinite(overWeight)) {
 			attackSpeed.applyModifier(new AttributeModifier(WEIGHT_UUID, "anduril.dualweight", overWeight, Operation.MULTIPLY_TOTAL));
 		}
 	}
@@ -106,41 +132,16 @@ public final class DualWield {
 		ticksSinceLastSwingOffhand = 0;
 	}
 
-	public int getItemWeight(ItemStack stack) {
-		if (stack.isEmpty()) {
-			return 1;
-		}
-		Item item = stack.getItem();
-		if (item.isShield(stack, living)) {
-			return 15;
-		} else if (item instanceof AxeItem) {
-			return 35;
-		} else if (item instanceof PickaxeItem) {
-			return 45;
-		} else if (item instanceof ShovelItem) {
-			return 40;
-		} else if (item instanceof SwordItem) {
-			return 20;
-		} else if (item instanceof HoeItem) {
-			return 10;
-		} else {
-			return 5;
-		}
-		// hulking/knockback affects item weight
-		
-		// Rings -> multi-use potions, give abilities to weapons
-	}
-
 	public float tryConsumeStamina(int amount) {
 		if (amount <= staminaCurrent) {
 			staminaCurrent -= amount;
 			return -0.00F;
 		} else {
 			int result = staminaCurrent - amount;
-			if (result > -staminaMax/2) {
+			if (result > staminaMin/2) {
 				staminaCurrent = result;
 				return -0.50F;
-			} else if (result > -staminaMax) {
+			} else if (result > staminaMin) {
 				staminaCurrent = result;
 				return -0.75F;
 			} else {
@@ -155,23 +156,20 @@ public final class DualWield {
 
 	// Only call if isPlayer()!!!!!!!!!!!!!!!!
 	public float getCooldownPeriodOffhand() {
-		swapHandsAndAttributes();
-		float ret = ((PlayerEntity)living).getCooldownPeriod();
-		swapHandsAndAttributes();
-		return ret;
+		return this.getAsSwapped(() -> ((PlayerEntity)living).getCooldownPeriod());
 	}
 
 	// Only call if isPlayer()!!!!!!!!!!!!!!!!
 	public void attackTargetEntityWithCurrentItemOffhand(Entity target) {
-		swapHandsAndAttributes();
-		int hold = ticksSinceLastSwing.get(living).intValue();
-		ticksSinceLastSwing.set(living, ticksSinceLastSwingOffhand);
-		((PlayerEntity)living).attackTargetEntityWithCurrentItem(target);
-		ticksSinceLastSwing.set(living, hold);
-		if (target.canBeAttackedWithItem() && target.hitByEntity(living)) {
-			resetCooldownOffhand();
-		}
-		swapHandsAndAttributes();
+		this.runAsSwapped(() -> {
+			int hold = ticksSinceLastSwing.get(living).intValue();
+			ticksSinceLastSwing.set(living, ticksSinceLastSwingOffhand);
+			((PlayerEntity)living).attackTargetEntityWithCurrentItem(target);
+			ticksSinceLastSwing.set(living, hold);
+			if (target.canBeAttackedWithItem() && target.hitByEntity(living)) {
+				resetCooldownOffhand();
+			}
+		});
 	}
 
 	public void runAsSwapped(Runnable runnable) {
@@ -227,8 +225,20 @@ public final class DualWield {
 		public static final Client INSTANCE = new Client();
 		private final Minecraft mc = Minecraft.getInstance();
 
+		public boolean isDualWield() {
+			return AndurilGameRules.CLIENT.get(AndurilGameRules.DUAL_WIELD);
+		}
+
 		public boolean isAttackMode() {
-			return AndurilGameRules.Client.client_dualWielding && SubmodClient.INSTANCE.toggle_attack_mode.isKeyDown();
+			return isDualWield() && SubmodClient.INSTANCE.toggle_attack_mode.isKeyDown();
+		}
+
+		public boolean isAttackStance() {
+			return !(mc.gameSettings.keyBindLeft.isKeyDown() && mc.gameSettings.keyBindRight.isKeyDown());
+		}
+
+		public boolean isSlice(Hand hand) {
+			return isAttackMode() && (hand == Hand.MAIN_HAND ? mc.gameSettings.keyBindAttack : mc.gameSettings.keyBindUseItem).isKeyDown() && IAndurilItem.of(mc.player.getHeldItem(hand).getItem()).canSlice(mc.player.getHeldItem(hand), mc.player, hand);
 		}
 
 		public RayTraceResult objectMouseOverOffhand = null;
@@ -237,55 +247,86 @@ public final class DualWield {
 		// Intercept click attacks
 		@SubscribeEvent
 		public void playerRightClick(InputEvent.ClickInputEvent event) {
-			if (!AndurilGameRules.Client.client_dualWielding) return;
-			DualWield dw = DualWield.of(mc.player);
-			if (event.isAttack()) { // Left clicks
-				if (mc.objectMouseOver != null) {
-					switch(mc.objectMouseOver.getType()) {
-					case ENTITY:
-						event.setSwingHand(false);
-						event.setCanceled(true);
-						if (-1.0F < dw.tryConsumeStamina(dw.getItemWeight(mc.player.getHeldItemMainhand()))) {
-							attackEntityMainhand(mc.player, ((EntityRayTraceResult)mc.objectMouseOver).getEntity());
-							mc.player.swingArm(Hand.MAIN_HAND);
+			SubmodClient.INSTANCE.hover_overlay.event(event);
+			if (isDualWield() && !event.isCanceled()) {
+				DualWield dw = DualWield.of(mc.player);
+				if (event.isAttack()) { // Left clicks
+					if (mc.objectMouseOver != null) {
+						Entity target = null;
+						switch(mc.objectMouseOver.getType()) {
+						case ENTITY:
+							target = ((EntityRayTraceResult)mc.objectMouseOver).getEntity();
+						case MISS:
+							if (isAttackStance() || isAttackMode())
+								attack(event, dw, target, Hand.MAIN_HAND);
+							else
+								defend(event, dw, Hand.OFF_HAND);
+							break;
+						case BLOCK: break;
+						default: break;
 						}
-						break;
-					case MISS:
-						event.setSwingHand(false);
-						event.setCanceled(true);
-						if (-1.0F < dw.tryConsumeStamina(dw.getItemWeight(mc.player.getHeldItemMainhand()))) {
-							attackEntityMainhand(mc.player, null);
-							mc.player.swingArm(Hand.MAIN_HAND);
-						}
-						break;
-					case BLOCK: break;
-					default: break;
 					}
-				}
-			} else if (isAttackMode() && event.isUseItem()) { // Right clicks
-				if (objectMouseOverOffhand != null) {
-					switch(objectMouseOverOffhand.getType()) {
-					case ENTITY:
-						event.setSwingHand(false);
-						event.setCanceled(true);
-						if (-1.0F < dw.tryConsumeStamina(dw.getItemWeight(mc.player.getHeldItemOffhand()))) {
-							attackEntityOffhand(mc.player, ((EntityRayTraceResult)objectMouseOverOffhand).getEntity());
-							mc.player.swingArm(Hand.OFF_HAND);
+				} else if (isAttackMode() && event.isUseItem()) { // Right clicks
+					if (objectMouseOverOffhand != null) {
+						Entity target = null;
+						switch(objectMouseOverOffhand.getType()) {
+						case ENTITY:
+							target = ((EntityRayTraceResult)objectMouseOverOffhand).getEntity();
+						case MISS:
+							if (isAttackStance())
+								attack(event, dw, target, Hand.OFF_HAND);
+							else
+								defend(event, dw, Hand.OFF_HAND);
+							break;
+						case BLOCK: break;
+						default: break;
 						}
-						break;
-					case MISS:
-						event.setSwingHand(false);
-						event.setCanceled(true);
-						if (-1.0F < dw.tryConsumeStamina(dw.getItemWeight(mc.player.getHeldItemOffhand()))) {
-							attackEntityOffhand(mc.player, null);
-							mc.player.swingArm(Hand.OFF_HAND);
+					}
+				} else if(event.isUseItem() && !isAttackStance()) {
+					if (mc.objectMouseOver != null) {
+						switch(mc.objectMouseOver.getType()) {
+						case ENTITY:
+							Entity target = ((EntityRayTraceResult)mc.objectMouseOver).getEntity();
+							ModelBBTraceResult trace = mc.objectMouseOver instanceof ModelBBTraceResult ? (ModelBBTraceResult)mc.objectMouseOver : null;
+							Vec3d hit = ((EntityRayTraceResult)mc.objectMouseOver).getHitVec();
+							interact(event, dw, target, trace, hit, Hand.OFF_HAND);
+						case MISS: break;
+						case BLOCK: break;
+						default: break;
 						}
-						break;
-					case BLOCK: break;
-					default: break;
 					}
 				}
 			}
+		}
+
+		private void attack(InputEvent.ClickInputEvent event, DualWield dw, Entity target, Hand hand) {
+			event.setSwingHand(false);
+			event.setCanceled(true);
+			ItemStack held = mc.player.getHeldItem(hand);
+			if (-1.0F < dw.tryConsumeStamina(IAndurilItem.of(held.getItem()).getItemWeight(held, mc.player))) {
+				if (hand == Hand.MAIN_HAND)
+					attackEntityMainhand(mc.player, target);
+				else
+					attackEntityOffhand(mc.player, target);
+				mc.player.swingArm(hand);
+			} else {
+				mc.ingameGUI.addChatMessage(ChatType.GAME_INFO, new TranslationTextComponent("anduril.stamina.exhausted"));
+			}
+		}
+
+		private void defend(InputEvent.ClickInputEvent event, DualWield dw, Hand hand) {
+			event.setSwingHand(false);
+			event.setCanceled(true);
+			ItemStack held = mc.player.getHeldItem(hand);
+			if (held.isShield(mc.player))
+				mc.player.setActiveHand(hand);
+		}
+
+		private void interact(InputEvent.ClickInputEvent event, DualWield dw, Entity target, ModelBBTraceResult trace, Vec3d hit, Hand hand) {
+			event.setSwingHand(false);
+			event.setCanceled(true);
+			new C2SAttackEntity().interact(target, hand, trace, hit).sendToServer();
+			mc.player.swingArm(hand);
 		}
 
 		// Force the player to click
@@ -294,6 +335,7 @@ public final class DualWield {
 			if (mc.player == null) return;
 			if (event.phase == TickEvent.Phase.START) {
 				DualWield dw = DualWield.of(mc.player);
+				new C2SAttackVector().with(dw).sendToServer();
 				dw.runAsSwapped(() -> {
 					mc.gameRenderer.getMouseOver(1.0F);
 					objectMouseOverOffhand = mc.objectMouseOver;
@@ -309,17 +351,17 @@ public final class DualWield {
 			}
 		}
 
-		private static final MethodWrapper<Void> syncCurrentPlayItem = MethodWrapper.of(PlayerController.class, ASMAPI.mapMethod("func_78750_j"));
-		private static final FieldWrapper<Integer> rightClickDelayTimer = FieldWrapper.of(Minecraft.class, ASMAPI.mapField("field_71467_ac"));
+		private static final MethodWrapper<Void> syncCurrentPlayItem = MethodWrapper.of(PlayerController.class, "func_78750_j");
+		private static final FieldWrapper<Integer> rightClickDelayTimer = FieldWrapper.of(Minecraft.class, "field_71467_ac");
 
 		// Model from PlayerController
 		private void attackEntityMainhand(ClientPlayerEntity player, Entity target) {
 			syncCurrentPlayItem.calls(mc.playerController);
 			if (!mc.playerController.isSpectatorMode()) {
 				if (target == null) {
-					new C2SAttackEntity().with(Hand.MAIN_HAND).sendToServer(Anduril.instance().network);
+					new C2SAttackEntity().miss(Hand.MAIN_HAND).sendToServer();
 				} else {
-					new C2SAttackEntity().with(target, Hand.MAIN_HAND).sendToServer(Anduril.instance().network);
+					new C2SAttackEntity().attack(target, Hand.MAIN_HAND, ModelBBTraceResult.tryCast(mc.objectMouseOver)).sendToServer();
 					player.attackTargetEntityWithCurrentItem(target);
 				}
 				player.resetCooldown();
@@ -331,9 +373,9 @@ public final class DualWield {
 			DualWield dw = DualWield.of(player);
 			if (!mc.playerController.isSpectatorMode()) {
 				if (target == null) {
-					new C2SAttackEntity().with(Hand.OFF_HAND).sendToServer(Anduril.instance().network);
+					new C2SAttackEntity().miss(Hand.OFF_HAND).sendToServer();
 				} else {
-					new C2SAttackEntity().with(target, Hand.OFF_HAND).sendToServer(Anduril.instance().network);
+					new C2SAttackEntity().attack(target, Hand.OFF_HAND, ModelBBTraceResult.tryCast(objectMouseOverOffhand)).sendToServer();
 					dw.attackTargetEntityWithCurrentItemOffhand(target);
 				}
 				dw.resetCooldownOffhand();
@@ -344,13 +386,17 @@ public final class DualWield {
 
 		@SubscribeEvent
 		public void renderAttackTime(RenderGameOverlayEvent.Pre event) {
-			if (!AndurilGameRules.Client.client_dualWielding) return;
-			if (isAttackMode() && event.getType() == RenderGameOverlayEvent.ElementType.CROSSHAIRS) {
-				event.setCanceled(true);
-				mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
-				RenderSystem.enableBlend();
-		        RenderSystem.enableAlphaTest();
-		        renderAttackIndicator(event.getPartialTicks());
+			if (!isDualWield()) return;
+			if (event.getType() == RenderGameOverlayEvent.ElementType.CROSSHAIRS) {
+				if (isAttackMode()) {
+					event.setCanceled(true);
+					mc.getTextureManager().bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+					RenderSystem.enableBlend();
+			        RenderSystem.enableAlphaTest();
+			        renderAttackIndicator(event.getPartialTicks());
+				} else if (SubmodClient.ActiveRenderInfoExtra.shouldRender) {
+					event.setCanceled(true);
+				}
 			}
 		}
 
@@ -360,9 +406,11 @@ public final class DualWield {
 			int scaledWidth = mc.getMainWindow().getScaledWidth();
 			int scaledHeight = mc.getMainWindow().getScaledHeight();
 			IngameGui gui = mc.ingameGUI;
-			if (settings.thirdPersonView == 0) {
-				if (mc.playerController.getCurrentGameType() != GameType.SPECTATOR || this.isTargetNamedMenuProvider(mc.objectMouseOver) || this.isTargetNamedMenuProvider(objectMouseOverOffhand)) {
-					if (settings.showDebugInfo && !settings.hideGUI && !mc.player.hasReducedDebug() && !settings.reducedDebugInfo) {
+			boolean targetMain = this.isTargetNamedMenuProvider(mc.objectMouseOver);
+			boolean targetOff = this.isTargetNamedMenuProvider(objectMouseOverOffhand);
+			if (mc.playerController.getCurrentGameType() != GameType.SPECTATOR || targetMain || targetOff) {
+				if (settings.showDebugInfo && !settings.hideGUI && !mc.player.hasReducedDebug() && !settings.reducedDebugInfo) {
+					if (settings.thirdPersonView == 0) {
 						RenderSystem.pushMatrix();
 						RenderSystem.translatef(scaledWidth/2, scaledHeight/2, gui.getBlitOffset());
 						ActiveRenderInfo renderinfo = mc.gameRenderer.getActiveRenderInfo();
@@ -371,65 +419,69 @@ public final class DualWield {
 						RenderSystem.scalef(-1.0F, -1.0F, -1.0F);
 						RenderSystem.renderCrosshair(10);
 						RenderSystem.popMatrix();
-					} else {
-						RenderSystem.blendFuncSeparate(SourceFactor.ONE_MINUS_DST_COLOR, DestFactor.ONE_MINUS_SRC_COLOR, SourceFactor.ONE, DestFactor.ZERO);
-						int i = 15;
-						// Color red so it's obvious you're in attack mode
-						if (isAttackMode()) RenderSystem.color3f(1.00F, 0.15F, 0.3F);
-						gui.blit((scaledWidth - i) / 2, (scaledHeight - i) / 2, 0, 0, i, i);
-						RenderSystem.color3f(1.00F, 1.00F, 1.00F);
-						if (mc.gameSettings.attackIndicator == AttackIndicatorStatus.CROSSHAIR) {
-							float coolMain = mc.player.getCooledAttackStrength(partialTicks);
-							boolean flagMain = false;
-							if (mc.pointedEntity != null && mc.pointedEntity instanceof LivingEntity && coolMain >= 1.0F) {
-								flagMain = mc.player.getCooldownPeriod() > 5.0F;
-								flagMain = flagMain & mc.pointedEntity.isAlive();
-							}
-							DualWield dw = DualWield.of(mc.player);
-							float coolOff = dw.getCooledAttackStrengthOffhand(partialTicks);
-							boolean flagOff = false;
-							if (pointedEntityOffhand != null && pointedEntityOffhand instanceof LivingEntity && coolOff >= 1.0F) {
-								flagOff = dw.getCooldownPeriodOffhand() > 5.0F;
-								flagOff = flagOff & pointedEntityOffhand.isAlive();
-							}
-							int x = scaledWidth / 2 - 8;
-							int y = scaledHeight / 2 - 7 + 11;
-							// account for people who have main and off hands swapped
-					        boolean mainIsRight = mc.gameSettings.mainHand == HandSide.RIGHT;
-					        int iconOffset = 15;
-					        RenderSystem.pushMatrix();
+					}
+				} else if (settings.thirdPersonView == 0 || Proxy.PROXY.isCustom3P()) {
+					RenderSystem.pushMatrix();
+					if (Proxy.PROXY.isCustom3P())
+						RenderSystem.translatef(0.0F, -30.0F, 0.0F);
+					RenderSystem.blendFuncSeparate(SourceFactor.ONE_MINUS_DST_COLOR, DestFactor.ONE_MINUS_SRC_COLOR, SourceFactor.ONE, DestFactor.ZERO);
+					int i = 15;
+					// Color red so it's obvious you're in attack mode
+					if (isAttackMode()) RenderSystem.color3f(1.00F, 0.15F, 0.3F);
+					if (settings.thirdPersonView == 0)
+					gui.blit((scaledWidth - i) / 2, (scaledHeight - i) / 2, 0, 0, i, i);
+					RenderSystem.color3f(1.00F, 1.00F, 1.00F);
+					if (mc.gameSettings.attackIndicator == AttackIndicatorStatus.CROSSHAIR) {
+						float coolMain = mc.player.getCooledAttackStrength(partialTicks);
+						boolean flagMain = false;
+						if (mc.pointedEntity != null && mc.pointedEntity instanceof LivingEntity && coolMain >= 1.0F) {
+							flagMain = mc.player.getCooldownPeriod() > 5.0F;
+							flagMain = flagMain && mc.pointedEntity.isAlive();
+						}
+						DualWield dw = DualWield.of(mc.player);
+						float coolOff = dw.getCooledAttackStrengthOffhand(partialTicks);
+						boolean flagOff = false;
+						if (pointedEntityOffhand != null && pointedEntityOffhand instanceof LivingEntity && coolOff >= 1.0F) {
+							flagOff = dw.getCooldownPeriodOffhand() > 5.0F;
+							flagOff = flagOff && pointedEntityOffhand.isAlive();
+						}
+						int x = scaledWidth / 2 - 8;
+						int y = scaledHeight / 2 - 7 + 11;
+						// account for people who have main and off hands swapped
+				        boolean mainIsRight = mc.gameSettings.mainHand == HandSide.RIGHT;
+				        int iconOffset = 15;
+				        RenderSystem.pushMatrix();
 					        // render main
-					        RenderSystem.translatef(mainIsRight ? iconOffset : -iconOffset, 0, 0);
+					        RenderSystem.translatef((mainIsRight ? 1 : -1) * iconOffset, 0, 0);
 					        renderAttack(gui, x, y, flagMain, coolMain);
 					        // render off
 					        RenderSystem.scalef(-1.0F, 1.0F, 1.0F);
-					        RenderSystem.translatef(mainIsRight ? 2 * iconOffset : -2 * iconOffset, 0, 0);
+					        RenderSystem.translatef((mainIsRight ? 2 : -2) * iconOffset, 0, 0);
 					        RenderSystem.translatef(-scaledWidth, 0.0F, 0.0F);
 					        renderAttack(gui, x, y, flagOff, coolOff);
-					        RenderSystem.popMatrix();
-					        float pct = Interpolation.linear(partialTicks, prevPct, (float)dw.staminaCurrent / (float)dw.staminaMax);
-					        RenderSystem.disableTexture();
-					        RenderSystem.color3f(1.0F, 1.0F, 1.0F);
-					        // Stamina bar
-					        int barWidth = 40;
-					        int barX = (scaledWidth - barWidth)/2;
-					        int barYFine = scaledHeight/2 - 10;
-					        int barYEx = barYFine + 1;
-					        int offsetFine = pct > 0 ? (int)(barWidth * pct) : 0;
-					        int offsetEx = pct < 0 ? (int)(barWidth * pct) : 0;
-					        RenderSystem.color3f(0.5F, 0.5F, 0.5F);
-					        gui.blit(barX + offsetFine, barYFine, 0, 0, barWidth - offsetFine, 1);
-				        	RenderSystem.disableBlend();
-					        if (pct < -0.5F) {
-					        	RenderSystem.color3f(1.0F, 0.3F, 0.3F);
-					        } else {
-					        	RenderSystem.color3f(1.0F, 0.6F, 0.6F);
-					        }
-					        gui.blit(barX, barYEx, 0, 0, barWidth + offsetEx, 1);
-					        RenderSystem.enableBlend();
-					        RenderSystem.enableTexture();
-						}
+				        RenderSystem.popMatrix();
+				        float pct = Interpolation.linear(partialTicks, prevPct, (float)dw.staminaCurrent / (float)dw.staminaMax);
+				        RenderSystem.disableTexture();
+				        // Stamina bar
+				        int barWidth = 40;
+				        int barX = (scaledWidth - barWidth)/2;
+				        int barYFine = scaledHeight/2 - 10;
+				        int barYEx = barYFine + 1;
+				        int offsetFine = pct > 0 ? (int)(barWidth * pct) : 0;
+				        int offsetEx = pct < 0 ? (int)(barWidth * pct) : 0;
+				        RenderSystem.color3f(0.5F, 0.5F, 0.5F);
+				        gui.blit(barX + offsetFine, barYFine, 0, 0, barWidth - offsetFine, 1);
+			        	RenderSystem.disableBlend();
+				        if (pct < -0.5F) {
+				        	RenderSystem.color3f(1.0F, 0.3F, 0.3F);
+				        } else {
+				        	RenderSystem.color3f(1.0F, 0.6F, 0.6F);
+				        }
+				        gui.blit(barX, barYEx, 0, 0, barWidth + offsetEx, 1);
+				        RenderSystem.enableBlend();
+				        RenderSystem.enableTexture();
 					}
+					RenderSystem.popMatrix();
 				}
 			}
 		}
@@ -457,6 +509,30 @@ public final class DualWield {
 			}
 		}
 
+	}
+
+	// Return true to indicate the INABILITY to use this weapon like this
+	public static boolean twoHandedCheck(ServerPlayerEntity sender, Hand hand) {
+		if (sender.getHeldItem(hand).isEmpty())
+			return false;
+		if (hand == Hand.OFF_HAND) {
+			if (AndurilTags.TWO_HANDED.contains(sender.getHeldItemOffhand().getItem())) {
+				return true;
+			}
+		}
+		// Main hand
+		if (AndurilTags.TWO_HANDED.contains(sender.getHeldItemMainhand().getItem())) {
+			if (!sender.getHeldItemOffhand().isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static enum Dexterity {
+		MAIN_ONLY,
+		MAIN_PREFERENT,
+		AMBIDEXTEROUS
 	}
 
 }

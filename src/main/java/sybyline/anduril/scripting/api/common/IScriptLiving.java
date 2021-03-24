@@ -1,5 +1,7 @@
 package sybyline.anduril.scripting.api.common;
 
+import net.minecraft.entity.LivingEntity;
+
 public interface IScriptLiving extends IScriptEntity {
 
 	// Statistics
@@ -13,5 +15,7 @@ public interface IScriptLiving extends IScriptEntity {
 	public void hurt(float damage);
 
 	public float health_max();
+
+	public LivingEntity getRawLiving();
 
 }

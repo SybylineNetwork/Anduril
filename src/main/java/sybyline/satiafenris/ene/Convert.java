@@ -3,16 +3,53 @@ package sybyline.satiafenris.ene;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import com.google.common.collect.*;
 import com.google.gson.*;
 import jdk.nashorn.api.scripting.*;
 import net.minecraft.nbt.*;
 
+// Come up with something better than this
+@SuppressWarnings("restriction")
 public final class Convert {
 
 	private Convert() {}
+
+	public static final Script convert_script = Script.graalOrNashorn();
+
+	public static final Set<String> supported_datas = Collections.unmodifiableSet(Sets.newHashSet("js", "json", "csv"));
+
+	// NBT, JS, JSON, Java
+
+	@Nullable
+	public static synchronized Object js_object_from_data(String type, String data) {
+		if (type == null || data == null) return null;
+		if ("js".contentEquals(type) || "json".contentEquals(type)) {
+			return convert_script.eval("data="+data+";data");
+		} else if ("csv".contentEquals(type)) {
+			JSObject jsAll = convert_script.newArrayType();
+			String[] lines = data.split("\\R");
+			if (lines.length > 0) {
+				String[] headers = lines[0].split(",");
+				for (int index = 1; index < headers.length; index++) {
+					if ((headers[index] = headers[index].trim()).isEmpty()) {
+						return null;
+					}
+				}
+				for (int dataindex = 1; dataindex < lines.length; dataindex++) {
+					String line = lines[dataindex];
+					JSObject jsmember = convert_script.newObjectType();
+					jsAll.setSlot(dataindex, jsmember);
+					String[] members = line.split(",");
+					for (int datamamber = 0; datamamber < Math.min(headers.length, members.length); datamamber++) {
+						jsmember.setMember(headers[datamamber], members[datamamber].trim());
+					}
+				}
+			}
+			return jsAll;
+		}
+		return null;
+	}
 
 	@Nullable
 	public static String js_string_of(Object object) {
@@ -85,6 +122,8 @@ public final class Convert {
 		if (object instanceof INBT)
 			return (INBT)object;
 		// JS
+		if (object instanceof jdk.nashorn.internal.runtime.ScriptObject)
+			return _nbt_from_js_native((jdk.nashorn.internal.runtime.ScriptObject)object);
 		if (object instanceof JSObject)
 			return _nbt_from_js((JSObject)object);
 		// Java
@@ -94,23 +133,7 @@ public final class Convert {
 			return _nbt_from_number((Number)object);
 		if (object instanceof String)
 			return StringNBT.valueOf((String)object);
-		if (object instanceof boolean[])
-			return _nbt_from_array(object);
-		if (object instanceof byte[])
-			return _nbt_from_array(object);
-		if (object instanceof char[])
-			return _nbt_from_array(object);
-		if (object instanceof short[])
-			return _nbt_from_array(object);
-		if (object instanceof int[])
-			return _nbt_from_array(object);
-		if (object instanceof long[])
-			return _nbt_from_array(object);
-		if (object instanceof float[])
-			return _nbt_from_array(object);
-		if (object instanceof double[])
-			return _nbt_from_array(object);
-		if (object instanceof Object[])
+		if (object.getClass().isArray())
 			return _nbt_from_array(object);
 		if (object instanceof List)
 			return _nbt_from_list((List<?>)object);
@@ -150,6 +173,8 @@ public final class Convert {
 				return _java_from_compound((CompoundNBT)object);
 		}
 		// JS
+		if (object instanceof jdk.nashorn.internal.runtime.ScriptObject)
+			return _java_from_jsnative((jdk.nashorn.internal.runtime.ScriptObject)object);
 		if (object instanceof JSObject)
 			return _java_from_js((JSObject)object);
 		// Self
@@ -158,16 +183,11 @@ public final class Convert {
 
 	@Nullable
 	public static Object js_of(Object object) {
-		return js_of(object, Script::graalOrNashorn);
+		return js_of(object, convert_script);
 	}
 
 	@Nullable
 	public static Object js_of(Object object, Script script) {
-		return js_of(object, () -> script);
-	}
-
-	@Nullable
-	public static Object js_of(Object object, Supplier<Script> script) {
 		// Null
 		if (object == null)
 			return null;
@@ -183,31 +203,31 @@ public final class Convert {
 			if (dynamic != null) 
 				return dynamic;
 		// NBT
-			return _js_from_nbt((INBT)object, script.get());
+			return _js_from_nbt((INBT)object, script);
 		}
 		// Java
 		if (object instanceof boolean[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof byte[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof char[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof short[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof int[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof long[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof float[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof double[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof Object[])
-			return _js_from_array(object, script.get());
+			return _js_from_array(object, script);
 		if (object instanceof List)
-			return _js_from_list((List<?>)object, script.get());
+			return _js_from_list((List<?>)object, script);
 		if (object instanceof Map)
-			return _js_from_map((Map<?, ?>)object, script.get());
+			return _js_from_map((Map<?, ?>)object, script);
 		return null;
 	}
 
@@ -249,6 +269,16 @@ public final class Convert {
 	}
 
 	// JS -> NBT
+
+	private static INBT _nbt_from_js_native(jdk.nashorn.internal.runtime.ScriptObject js) {
+		if (js.isArray()) return _nbt_from_array(js.getArray().asObjectArray());
+		CompoundNBT ret = new CompoundNBT();
+		for (String key : js.getOwnKeys(true)) {
+			Object value = js.get(key);
+			ret.put(key, nbt_of(value));
+		}
+		return null;
+	}
 
 	private static INBT _nbt_from_js(JSObject js) {
 		if (js.isFunction()) return null;
@@ -379,6 +409,25 @@ public final class Convert {
 	}
 
 	// JS -> Java
+
+	private static Object _java_from_jsnative(jdk.nashorn.internal.runtime.ScriptObject js) {
+		if (js.isArray()) return _java_from_jsarraynative(js);
+		Map<String, Object> ret = Maps.newHashMap();
+		for (String key : js.getOwnKeys(true)) {
+			Object value = js.get(key);
+			ret.put(key, java_of(value));
+		}
+		return ret;
+	}
+	private static Object _java_from_jsarraynative(jdk.nashorn.internal.runtime.ScriptObject js) {
+		List<Object> ret = Lists.newArrayList();
+		jdk.nashorn.internal.runtime.arrays.ArrayData arr = js.getArray();
+		for (int i = 0; i < arr.length(); i++) {
+			Object slot = arr.getObject(i);
+			ret.add(java_of(slot));
+		}
+		return ret;
+	}
 
 	private static Object _java_from_js(JSObject js) {
 		if (js.isFunction()) return null;

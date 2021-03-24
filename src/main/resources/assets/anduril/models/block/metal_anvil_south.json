@@ -1,0 +1,6 @@
+{
+    "parent": "anduril:block/metal_anvil",
+    "textures": {
+        "top": "anduril:block/metal_anvil_top_south"
+    }
+}

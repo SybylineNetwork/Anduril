@@ -30,6 +30,14 @@ public interface IScriptListEntry {
 		return this.pos_getY();
 	}
 
+	public default int xMax() {
+		return this.pos_getX() + this.entry_width();
+	}
+
+	public default int yMax() {
+		return this.pos_getY() + this.entry_height();
+	}
+
 	public default boolean contains(int mouseX, int mouseY) {
 		if (parent().contains(mouseX, mouseY)) {
 			mouseX -= pos_getX();

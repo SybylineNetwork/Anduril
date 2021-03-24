@@ -1,12 +1,12 @@
 package sybyline.anduril.scripting.api.client;
 
-import sybyline.anduril.scripting.api.common.IMCResource;
+import net.minecraft.util.ResourceLocation;
 
 public interface IScriptWidgetTexture {
 
 	public void draw(IScriptGui<?> screen, int x, int y, int w, int h);
 
-	static IScriptWidgetTexture of(IMCResource resource) {
+	static IScriptWidgetTexture of(ResourceLocation resource) {
 		return new IScriptWidgetTexture() {
 			@Override
 			public void draw(IScriptGui<?> screen, int x, int y, int w, int h) {

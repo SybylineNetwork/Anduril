@@ -1,0 +1,153 @@
+package siege.common.siege.command.old;
+
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.command.CommandSource;
+import net.minecraft.util.math.MathHelper;
+import siege.common.mode.Mode;
+import siege.common.mode.ModeCTF;
+import siege.common.mode.ModeDomination;
+import siege.common.siege.Siege;
+import siege.common.siege.SiegeDatabase;
+import siege.common.siege.SiegeTeam;
+import siege.common.siege.command.CommandBase;
+import siege.common.siege.command.SiegeCommands;
+import siege.common.zone.ZoneControl;
+import siege.common.zone.ZoneFlag;
+
+@Deprecated
+public class CommandSiegeZone extends CommandBase {
+
+	@Override
+	public String getCommandName() {
+		return "siege_zone";
+	}
+
+	@Override
+	public String getCommandUsage(CommandSource sender) {
+		return "/siege_zone <siege> <add|set-value|remove> <team|name> [<x> <y> <z> <size>]|[<value>]";
+	}
+
+	@Override
+	public void processCommand(CommandSource sender, String[] args) {
+		if(args.length < 3) throw SiegeCommands.runtime("Not enough args!");
+		Siege siege = SiegeDatabase.getSiege(args[0]);
+		if(siege == null) throw SiegeCommands.runtime("No such siege '" + args[0] + "'!");
+		if(siege.isActive()) throw SiegeCommands.runtime("Siege is already running!");
+		if(siege.isDeleted()) throw SiegeCommands.runtime("Siege is deleted!");
+		String op = args[1];
+		String name = args[2];
+		Mode mode = siege.mode;
+		if(mode instanceof ModeCTF) {
+			ModeCTF ctf = (ModeCTF)mode;
+			SiegeTeam team = siege.getTeam(name);
+			if(team == null) throw SiegeCommands.runtime("No such team '" + name + "'!");
+			if(op.equals("remove")) {
+				boolean removed = false;
+				for(ZoneFlag zf : ctf.zones.toArray(new ZoneFlag[0])) {
+					if(zf.owner == team) {
+						ctf.owners.remove(zf.owner);
+						ctf.zones.remove(zf);
+						removed = true;
+					}
+				}
+				if(removed) {
+					func_152373_a(sender, this, "Removed the home zone for team %s.", name);
+				} else {
+					throw SiegeCommands.runtime("That team does not have a home zone set!");
+				}
+			} else if(op.equals("add")) {
+				if(args.length < 7) throw SiegeCommands.runtime("Not enough arguments! Missing coordinates and size.");
+				for(ZoneFlag zf : ctf.zones.toArray(new ZoneFlag[0])) {
+					if(zf.owner == team) {
+						ctf.owners.remove(zf.owner);
+						ctf.zones.remove(zf);
+					}
+				}
+				int x = parseInt(sender, args[3], MathHelper.floor(sender.getPos().x + 0.5));
+				int y = parseInt(sender, args[4], MathHelper.floor(sender.getPos().y + 0.5));
+				int z = parseInt(sender, args[5], MathHelper.floor(sender.getPos().z + 0.5));
+				int size = parseInt(sender, args[6], 0);
+				ZoneFlag zf = new ZoneFlag(team, x, y, z, size);
+				zf.siege = siege;
+				ctf.owners.put(zf.owner, zf);
+				ctf.zones.add(zf);
+				team.setRespawnPoint(x, y, z);
+				func_152373_a(sender, this, "Set the home zone for team %s.", name);
+			} else if(op.equals("set-value")) {
+				throw SiegeCommands.runtime("This mode's zones do not have values to set!");
+			} else {
+				throw SiegeCommands.runtime("Invalid operation '" + op + "'!");
+			}
+		} else if(mode instanceof ModeDomination) {
+			ModeDomination dom = (ModeDomination)mode;
+			if(op.equals("remove")) {
+				boolean removed = false;
+				for(ZoneControl c : dom.zones.toArray(new ZoneControl[0])) {
+					if(c.name.equals(name)) {
+						dom.zones.remove(c);
+						removed = true;
+					}
+				}
+				if(removed) {
+					func_152373_a(sender, this, "Removed the zone %s.", name);
+				} else {
+					throw SiegeCommands.runtime("That zone does not exist!");
+				}
+			} else if(op.equals("add")) {
+				if(args.length < 7) throw SiegeCommands.runtime("Not enough arguments! Missing coordinates and size.");
+				int x = parseInt(sender, args[3], MathHelper.floor(sender.getPos().x + 0.5));
+				int y = parseInt(sender, args[4], MathHelper.floor(sender.getPos().y + 0.5));
+				int z = parseInt(sender, args[5], MathHelper.floor(sender.getPos().z + 0.5));
+				int size = parseInt(sender, args[6], 0);
+				int order = args.length < 8 ? parseInt(sender, args[7], 0) : 0;
+				ZoneControl zc = new ZoneControl(name, x, y, z, size, order);
+				zc.siege = siege;
+				dom.zones.add(zc);
+				func_152373_a(sender, this, "Added the zone %s.", name);
+			} else if(op.equals("set-value")) {
+				if(args.length < 4) throw SiegeCommands.runtime("Not enough arguments! Missing value.");
+				boolean did = false;
+				for(ZoneControl c : dom.zones.toArray(new ZoneControl[0])) {
+					if(c.name.equals(name)) {
+						c.setValue(sender, parseInt(sender, args[3], 0));
+						did = true;
+					}
+				}
+				if(did) {
+					func_152373_a(sender, this, "Set zone's value to '" + args[3] + "'.");
+				} else {
+					throw SiegeCommands.runtime("That zone does not exist!");
+				}
+			} else {
+				throw SiegeCommands.runtime("Invalid operation '" + op + "'!");
+			}
+		} else {
+			throw SiegeCommands.runtime("This siege's mode does not use zones!");
+		}
+	}
+
+	@Override
+    public List<String> addTabCompletionOptions(CommandSource sender, String[] args) {
+		if(args.length == 1) {
+			return getListOfStringsMatchingLastWord(args, SiegeDatabase.getAllSiegeNames().toArray(new String[0]));
+		}
+		if(args.length == 2) {
+			return getListOfStringsMatchingLastWord(args, "add", "set-value", "remove");
+		}
+		if(args.length == 3) {
+			return getListOfStringsFromIterableMatchingLastWord(args, SiegeDatabase.getSiege(args[0]).listTeamNames());
+		}
+		if(args.length == 4) {
+			return getListOfStringsMatchingLastWord(args, String.valueOf(MathHelper.floor(sender.getPos().getX())));
+		}
+		if(args.length == 5) {
+			return getListOfStringsMatchingLastWord(args, String.valueOf(MathHelper.floor(sender.getPos().getY())));
+		}
+		if(args.length == 6) {
+			return getListOfStringsMatchingLastWord(args, String.valueOf(MathHelper.floor(sender.getPos().getZ())));
+		}
+		List<String> ret = new ArrayList<>(); return ret;
+	}
+
+}

@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "anduril:training_dummy"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.root.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.root.description"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "anduril:textures/gui/advancements/backgrounds/anduril/combat.png"
+  },
+  "criteria": {
+    "dealt_damage": {
+      "trigger": "minecraft:player_hurt_entity",
+      "conditions": {}
+    }
+  },
+  "requirements": [
+    [
+      "dealt_damage"
+    ]
+  ]
+}

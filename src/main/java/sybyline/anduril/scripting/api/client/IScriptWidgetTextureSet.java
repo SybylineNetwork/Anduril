@@ -1,6 +1,6 @@
 package sybyline.anduril.scripting.api.client;
 
-import sybyline.anduril.scripting.api.common.IMCResource;
+import net.minecraft.util.ResourceLocation;
 
 public interface IScriptWidgetTextureSet {
 
@@ -12,7 +12,7 @@ public interface IScriptWidgetTextureSet {
 	 */
 	public IScriptWidgetTexture getSubTexture(int u, int v, int s, int t);
 
-	static IScriptWidgetTextureSet of(IMCResource resource, int w, int h) {
+	static IScriptWidgetTextureSet of(ResourceLocation resource, int w, int h) {
 		float w_f = w, h_f = h;
 		return new IScriptWidgetTextureSet() {
 			@Override

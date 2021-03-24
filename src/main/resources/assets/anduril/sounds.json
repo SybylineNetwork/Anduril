@@ -1,0 +1,49 @@
+{
+	"combat.block": {
+		"subtitle": "anduril.sound.combat.block",
+		"sounds": [
+			"anduril:combat/block_1",
+			"anduril:combat/block_2",
+			"anduril:combat/block_3",
+			"anduril:combat/block_4",
+			"anduril:combat/block_5"
+		]
+	},
+	"combat.cut": {
+		"subtitle": "anduril.sound.combat.cut",
+		"sounds": [
+			"anduril:combat/cut_1"
+		]
+	},
+	"combat.cut.powerful": {
+		"subtitle": "anduril.sound.combat.cut.powerful",
+		"sounds": [
+			"anduril:combat/cut_powerful_1",
+			"anduril:combat/cut_powerful_2"
+		]
+	},
+	"combat.draw_sword": {
+		"subtitle": "anduril.sound.combat.draw_sword",
+		"sounds": [
+			"anduril:combat/draw_sword_1",
+			"anduril:combat/draw_sword_2",
+			"anduril:combat/draw_sword_3",
+			"anduril:combat/draw_sword_4"
+		]
+	},
+	"combat.parry": {
+		"subtitle": "anduril.sound.combat.parry",
+		"sounds": [
+			"anduril:combat/parry_1",
+			"anduril:combat/parry_2",
+			"anduril:combat/parry_3",
+			"anduril:combat/parry_4"
+		]
+	},
+	"combat.punch": {
+		"subtitle": "anduril.sound.combat.punch",
+		"sounds": [
+			"anduril:combat/punch_1"
+		]
+	}
+}

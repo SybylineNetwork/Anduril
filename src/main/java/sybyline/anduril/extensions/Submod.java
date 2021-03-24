@@ -11,8 +11,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.forgespi.language.ModFileScanData;
 import net.minecraftforge.forgespi.language.ModFileScanData.AnnotationData;
-import sybyline.anduril.extensions.annotation.SubmodMarker;
-import sybyline.anduril.extensions.client.SubmodClient;
+import sybyline.anduril.client.SubmodClient;
 
 /**
  * Submods extend from this class, have an {@code @Submod.Marker} on their type,

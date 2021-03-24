@@ -1,5 +1,12 @@
 package sybyline.anduril.util.math;
 
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
+import sybyline.anduril.util.Util;
+
 public interface Interpolation {
 
 	public double interpolate(double normal);
@@ -10,6 +17,72 @@ public interface Interpolation {
 
 	public static float linear(float normal, float start, float end) {
 		return normal * end + (1.0F - normal) * start;
+	}
+
+	public static Vec2f linear(float normal, Vec2f start, Vec2f end) {
+		return new Vec2f(linear(normal, start.x, end.x), linear(normal, start.y, end.y));
+	}
+
+	public static Vec3d linear(double normal, Vec3d start, Vec3d end) {
+		return end.scale(normal).add(start.scale(1.0D - normal));
+	}
+
+	public static float linear_index(int index, int length) {
+		return ((float)(index)) / ((float)(length-1));
+	}
+
+	public static void linear_bezier(float normal, float... ins) {
+		int order = ins.length;
+		while(order --> 0)
+			for (int i = 0; i < order; i++)
+				ins[i] = linear(normal, ins[i], ins[i + 1]);
+	}
+
+	public static Vec2f linear_bezier(float normal, float[][] flatxy) {
+		linear_bezier(normal, flatxy[0]);
+		linear_bezier(normal, flatxy[1]);
+		return new Vec2f(flatxy[0][0], flatxy[1][0]);
+	}
+
+	public static Vec2f[] linear_bezier_curve_const(int points, Vec2f... ins) {
+		if (points < 2) throw new IllegalArgumentException(String.valueOf(points));
+		float[][] flatxy = Util.Structs.flatten(ins);
+		float[][] flatxy_reuse = null;
+		Vec2f[] ret = new Vec2f[points];
+		for (int i = 0; i < points; i++) {
+			if (flatxy_reuse == null) {
+				flatxy_reuse = flatxy.clone();
+			} else {
+				System.arraycopy(flatxy[0], 0, flatxy_reuse[0], 0, flatxy.length);
+				System.arraycopy(flatxy[1], 0, flatxy_reuse[1], 0, flatxy.length);
+			}
+			ret[i] = linear_bezier(linear_index(i, points), flatxy_reuse);
+		}
+		return ret;
+	}
+
+	public static List<Vec2f> linear_bezier_curve_dyn_normal(float normalstart, Vec2f... ins) {
+		float[][] flatxy = Util.Structs.flatten(ins);
+		List<Vec2f> ret = new ArrayList<>(MathHelper.ceil(1.2F / normalstart));
+		ret.add(ins[0]);
+		Vec2f prev = ins[0];
+		float prevDist = 1;
+		float stepAdj = normalstart;
+		for (float k = stepAdj; k < 1.0F; k += stepAdj) {
+			Vec2f fin = linear_bezier(k, flatxy);
+			float dist = Util.Numbers.dist(prev, fin);
+			if (k != stepAdj) // Only false for first iteration
+				stepAdj *= (prevDist / dist);
+			prevDist = dist;
+			prev = fin;
+			ret.add(fin);
+		}
+		ret.add(ins[ins.length - 1]);
+		return ret;
+	}
+
+	public static List<Vec2f> linear_bezier_curve_dyn_step(float step, Vec2f... ins) {
+		return linear_bezier_curve_dyn_normal((float) Util.Calculus.estimate(5, 5, 0.01, step, step, x -> Util.Numbers.dist(ins[0], linear_bezier((float)x, Util.Structs.flatten(ins)))), ins);
 	}
 
 	public static double linear(double normal) {
@@ -24,27 +97,11 @@ public interface Interpolation {
 		return normal * 2.0D - 1.0D;
 	}
 
-	public static final class Asymetric {
+	public interface Asymetric extends Interpolation {
 
-		private Asymetric() {}
-
-		public static Interpolation of(double start, double median, double end) {
-			return new AsymetricPseudoLogarithmic(start, median, end);
-		}
-
-		private static class AsymetricPseudoLogarithmic implements Interpolation {
-			private final double start;
-			private final double end;
-			private final double diff;
-			public AsymetricPseudoLogarithmic(double start, double median, double end) {
-				this.start = start;
-				this.end = end;
-				this.diff = median - (start + end) / 2.0D;
-			}
-			@Override
-			public double interpolate(double normal) {
-				return jumpOrder2(normal) * diff + linear(normal, start, end);
-			}
+		public static Asymetric of(double start, double median, double end) {
+			double diff = median - (start + end) / 2.0D;
+			return normal -> jumpOrder2(normal) * diff + linear(normal, start, end);
 		}
 
 	}

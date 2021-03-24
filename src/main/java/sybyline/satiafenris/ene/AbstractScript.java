@@ -3,23 +3,38 @@ package sybyline.satiafenris.ene;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.function.*;
-import javax.script.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.script.*;
+import jdk.internal.dynalink.beans.StaticClass;
 import sybyline.anduril.util.rtc.RuntimeTricks;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "restriction"})
 public abstract class AbstractScript implements Script {
 
+	private static final String
+		ctxdecl = "Includes={};",
+		packages = Stream.of(
+			"net", "sybyline", "siege", "jsm"
+			).map(s->s+"=Packages."+s+";").collect(Collectors.joining()),
+		_new_array = "_new_array=function(){return [];};",
+		_new_object = "_new_object=function(){return {};};",
+		println = "println=function(o){java.lang.System.out.println(o);};",
+		errln = "errln=function(o){java.lang.System.err.println(o);};",
+		evaluation = ctxdecl + packages +  _new_array + _new_object + println + errln;
+	
 	protected final ScriptEngine engine;
 	protected final ScriptContext context;
 	protected final Invocable methods;
 
 	protected boolean isStrict = false;
+	protected Function<String, Stream<String>> inclusions = null;
 	protected final List<String> whitelist_class;
 	protected final List<String> whitelist_package;
 	
 	protected AbstractScript(Function<Predicate<String>, ScriptEngine> factory) {
-		this(factory, engine -> (Invocable)engine);
+		this(factory, Invocable.class::cast);
 	}
 
 	protected AbstractScript(Function<Predicate<String>, ScriptEngine> factory, Function<ScriptEngine, Invocable> invocable) {
@@ -34,14 +49,10 @@ public abstract class AbstractScript implements Script {
         unbind("loadWithNewGlobal");
         unbind("exit");
         
-        // Messy, really should get bindOverloadedMethod to work
-        this.bindMethod("_using", (Consumer<String>)this::importJS);
-        this.bindMethod("_using_as", (BiConsumer<String, String>)this::importJS);
-        this.eval("use=function(one,two){if(typeof two==\"undefined\"){_using(one);}else{_using_as(one,two);}};");
-        this.eval("exists=function(obj){if(typeof obj==\"undefined\"){return false;}else{return obj!=null;}};");
-        this.eval("format=function(format){var args=Array.prototype.slice.call(arguments,1);return format.replace(/{(\\d+)}/g,function(match,number){return typeof args[number]!='undefined'?args[number]:match;});};");
-        this.eval("_new_array=function(){return [];};");
-        this.eval("_new_object=function(){return {};};");
+        this.bind("Types", TypeConstants.INSTANCE);
+        this.bindMethod("define", this::define);
+        this.bindMethodVarargs("use", this::importJS);
+        this.eval(evaluation);
 	}
 
 	public boolean checkAllow(String className) {
@@ -56,6 +67,12 @@ public abstract class AbstractScript implements Script {
 	@Override
 	public Script strict() {
 		isStrict = true;
+		return this;
+	}
+
+	@Override
+	public Script setInclusions(Function<String, Stream<String>> include) {
+		inclusions = include;
 		return this;
 	}
 
@@ -76,14 +93,30 @@ public abstract class AbstractScript implements Script {
 		}
 	}
 
-	private void importJS(String clazz) {
-		String shorthand = clazz.substring(clazz.lastIndexOf(".") + 1);
-		this.importJS(clazz, shorthand);
+	@Override
+	public boolean isPreprocessorFlag(String flag) {
+		return flags.test(flag);
+	}
+	private Predicate<String> flags = Preprocessor.flags();
+	@Override
+	public Script setPreprocessorFlags(String... flags) {
+		this.flags = Preprocessor.flags(flags);
+		return this;
 	}
 
-	private void importJS(String clazz, String shorthand) {
-		Class<?> type = RuntimeTricks.procrastinate(() -> Class.forName(clazz, true, Thread.currentThread().getContextClassLoader()));
+	private Object importJS(Object... args) {
+		String clazz = String.valueOf(args[0]);
+		String shorthand = args.length >= 2 ? String.valueOf(args[1]) : clazz.substring(clazz.lastIndexOf(".") + 1);
+		StaticClass type = StaticClass.forClass(RuntimeTricks.procrastinate(() -> Class.forName(clazz)));
 		this.bind(shorthand, type);
+		return type;
+	}
+
+	public Object define(jdk.nashorn.api.scripting.JSObject definition) {
+		if (!definition.isFunction())
+			throw new IllegalArgumentException("Tried to extend with a non-function!");
+		Class<?> sub = Subclasser.create(definition);
+		return StaticClass.forClass(sub);
 	}
 
 	@Override
@@ -109,6 +142,15 @@ public abstract class AbstractScript implements Script {
 		} catch (ScriptException e) {
 			throw new ScriptRuntimeException(e);
 		}
+	}
+
+	@Override
+	public Stream<String> inclusion(String resource) {
+		if (this.inclusions != null) {
+			Stream<String> incl = this.inclusions.apply(resource);
+			if (incl != null) return incl;
+		}
+		return Preprocessor.DEFAULT_INCLUDE.apply(resource);
 	}
 
 	@Override
@@ -148,6 +190,9 @@ public abstract class AbstractScript implements Script {
 		}
 		return ret;
 	}
+	static final Script java() {
+		return new JavaScript();
+	}
 
 	private static final boolean supportsGraal;
 	private static final Supplier<Script> supplyGraal;
@@ -155,7 +200,7 @@ public abstract class AbstractScript implements Script {
 	static {
 		boolean supported;
 		Supplier<Script> supplier;
-		try {
+		if (Boolean.getBoolean("useGraalJS")) try {
 			ClassLoader ctx = Thread.currentThread().getContextClassLoader();
 			Class.forName("com.oracle.truffle.js.scriptengine.GraalJSEngineFactory", true, ctx);
 			Class<? extends Script> graalclass = (Class<? extends Script>)
@@ -164,6 +209,9 @@ public abstract class AbstractScript implements Script {
 			supplier = RuntimeTricks.procrastinate_supplier(graalconstructor::newInstance);
 			supported = true;
 		} catch(Exception e) {
+			supported = false;
+			supplier = NashornScript::new;
+		} else {
 			supported = false;
 			supplier = NashornScript::new;
 		}

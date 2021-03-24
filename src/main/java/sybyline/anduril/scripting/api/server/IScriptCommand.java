@@ -1,8 +1,15 @@
 package sybyline.anduril.scripting.api.server;
 
 import java.util.function.BiConsumer;
+import java.util.function.UnaryOperator;
+
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+
+import net.minecraft.command.CommandSource;
 
 public interface IScriptCommand {
+
+	public void withRaw(UnaryOperator<LiteralArgumentBuilder<CommandSource>> literal);
 
 	// Sender arguments -- must have one
 

@@ -1,0 +1,57 @@
+package siege.common.siege.command.old;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import net.minecraft.command.CommandSource;
+import net.minecraft.util.text.TextFormatting;
+import siege.common.siege.Siege;
+import siege.common.siege.SiegeDatabase;
+import siege.common.siege.SiegeTeam;
+import siege.common.siege.command.CommandBase;
+import siege.common.siege.command.SiegeCommands;
+
+@Deprecated
+public class CommandSiegeTeamColor extends CommandBase {
+
+	@Override
+	public String getCommandName() {
+		return "siege_teamcolor";
+	}
+
+	@Override
+	public String getCommandUsage(CommandSource sender) {
+		return "/siege_teamcolor <siege> <team> <color>";
+	}
+
+	@Override
+	public void processCommand(CommandSource sender, String[] args) {
+		if(args.length < 3) throw SiegeCommands.runtime("Not enough args!");
+		Siege siege = SiegeDatabase.getSiege(args[0]);
+		if(siege == null) throw SiegeCommands.runtime("No such siege '" + args[0] + "'!");
+		SiegeTeam team = siege.getTeam(args[1]);
+		if(team == null) throw SiegeCommands.runtime("No such team '" + args[1] + "'!");
+		TextFormatting color = TextFormatting.getValueByName(args[2]);
+		if(color == null) throw SiegeCommands.runtime("No such color '" + args[2] + "'!");
+		if(!color.isColor()) throw SiegeCommands.runtime("That formatting code is not a color!");
+		team.color = color;
+		func_152373_a(sender, this, "Set color for team %s to %s", team.getTeamName(), color.getFriendlyName());
+	}
+
+	@Override
+    public List<String> addTabCompletionOptions(CommandSource sender, String[] args) {
+		if(args.length == 1) {
+			return getListOfStringsMatchingLastWord(args, SiegeDatabase.getAllSiegeNames().toArray(new String[0]));
+		}
+		if(args.length == 2) {
+			Siege siege = SiegeDatabase.getSiege(args[0]);
+			return getListOfStringsFromIterableMatchingLastWord(args, siege == null ? Collections.emptyList() : siege.listTeamNames());
+		}
+		if(args.length == 3) {
+			return getListOfStringsMatchingLastWord(args, "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple", 
+					"gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple", "yellow", "white");
+		}
+		List<String> ret = new ArrayList<>(); return ret;
+	}
+
+}

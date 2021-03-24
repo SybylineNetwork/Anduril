@@ -13,17 +13,19 @@ import sybyline.anduril.util.data.FileReloadListener;
 public class ServerSetups {
 	
 	public ServerSetups(ServerScripting serverScripting) {
+		this.serverScripting = serverScripting;
 		serverScripting.resources.addReloadListener(jsScripts);
 	}
 	
-	private final Map<String, ScriptWrapperSimple> dynamic_wrappers = Maps.newHashMap();
+	private final ServerScripting serverScripting;
+	public final Map<ResourceLocation, ScriptWrapperSimple> wrappers = Maps.newHashMap();
 	
 	public final FileReloadListener<ScriptWrapperSimple> jsScripts = new FileReloadListener<ScriptWrapperSimple>(ScriptWrapperSimple.FORMAT, Util.ANDURIL + "/setup", this::reloadJS);
 	
 	private void reloadJS(Map<ResourceLocation, ScriptWrapperSimple> data, IResourceManager resources, IProfiler profiler) {
 		profiler.startSection("sybyline_scripts_register");
-		dynamic_wrappers.clear();
-		data.forEach(this::registerJS);
+		wrappers.clear();
+		serverScripting.queueSetups(() -> data.forEach(this::registerJS));
 		profiler.endSection();
 	}
 	
@@ -31,7 +33,7 @@ public class ServerSetups {
 		try {
 			simple.domain = location.getNamespace();
 			simple.setupWithContext(null);
-			dynamic_wrappers.put(simple.name, simple);
+			wrappers.put(location, simple);
 		} catch(Exception e) {
 			CommonScripting.LOGGER.error("A script ("+location+") errored during initialization: ", e);
 		}

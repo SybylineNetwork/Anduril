@@ -1,0 +1,20 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		" S ",
+		"SGS",
+		" S "
+	],
+	"key": {
+		"S": {
+			"item": "anduril:silver_ingot"
+		},
+		"G": {
+			"item": "minecraft:gold_ingot"
+		}
+		
+	},
+	"result": {
+		"item": "anduril:thermometer"
+	}
+}

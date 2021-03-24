@@ -1,0 +1,35 @@
+{
+  "parent": "anduril:anduril/combat/ambidexterity_1",
+  "display": {
+    "icon": {
+      "item": "minecraft:iron_sword",
+      "nbt": "{Damage:0}"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.ambidexterity_2.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.ambidexterity_2.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "attacked_off_hand": {
+      "trigger": "anduril:damage_dealt_offhand",
+      "conditions": {
+        "stat": "anduril:damage_dealt_offhand",
+        "bound": {
+          "min": 100000
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "attacked_off_hand"
+    ]
+  ]
+}

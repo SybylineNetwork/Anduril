@@ -1,0 +1,46 @@
+{
+  "parent": "anduril:anduril/combat/mine_praecantium",
+  "display": {
+    "icon": {
+      "item": "anduril:staff"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.craft_implement.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.craft_implement.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "wand": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "anduril:wand"
+          }
+        ]
+      }
+    },
+    "staff": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "anduril:staff"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "wand",
+      "staff"
+    ]
+  ]
+}

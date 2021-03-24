@@ -1,16 +1,31 @@
 package sybyline.anduril.util.data;
 
 import java.io.File;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.event.server.FMLServerStoppedEvent;
 import sybyline.anduril.util.Util;
 
-class FileCache<Identifier, Data, Type extends ICachable<Data>> implements ICache<Identifier, Data, Type> {
+@EventBusSubscriber
+public class FileCache<Identifier, Data, Type extends ICachable<Data>> implements ICache<Identifier, Data, Type> {
+
+	private static final List<ICache<?, ?, ?>> caches = Collections.synchronizedList(new ArrayList<>());
+
+	@SubscribeEvent
+	public static void serverStopped(FMLServerStoppedEvent event) {
+		caches.forEach(ICache::saveAllEntries);
+	}
 
 	FileCache(ResourceLocation location, IFormat<Data> format, Function<Identifier, Type> factory, Function<Identifier, String> filenameFactory) {
 		this.file = null;
@@ -18,6 +33,7 @@ class FileCache<Identifier, Data, Type extends ICachable<Data>> implements ICach
 		this.format = format;
 		this.factory = factory;
 		this.filenameFactory = filenameFactory;
+		caches.add(this);
 		this.checkFile();
 	}
 
@@ -125,14 +141,13 @@ class FileCache<Identifier, Data, Type extends ICachable<Data>> implements ICach
 	public void findStaleEntries() {
 		List<CacheEntry> old = Lists.newArrayList();
 		synchronized (cache) {
-			Iterator<Entry<Identifier, CacheEntry>> itr = cache.entrySet().iterator();
-			if (itr.hasNext()) {
-				for (Entry<Identifier, CacheEntry> entry = itr.next(); itr.hasNext(); entry = itr.next()) {
-					CacheEntry value = entry.getValue();
-					if (value.datum.shouldKeep()) continue;
-					itr.remove();
-					old.add(value);
+			Collection<CacheEntry> set = cache.values();
+			if (!set.isEmpty()) {
+				for (CacheEntry entry : set) {
+					if (entry.datum.shouldKeep()) continue;
+					old.add(entry);
 				}
+				set.removeAll(old);
 			}
 		}
 		synchronized (savable) {

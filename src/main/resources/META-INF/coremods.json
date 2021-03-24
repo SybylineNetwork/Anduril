@@ -1,3 +1,16 @@
 {
-	"dual_wield": "coremods/anduril/dual_wield.js"
+	"block_slipperiness": "coremods/anduril/block_slipperiness.js",
+	"dual_wield": "coremods/anduril/dual_wield.js",
+	"item_models": "coremods/anduril/item_models.js",
+	"item_modifiers": "coremods/anduril/item_modifiers.js",
+	"custom_items": "coremods/anduril/custom_items.js",
+	"spell_book_additional": "coremods/anduril/spell_book_additional.js",
+	"advancement_extra": "coremods/anduril/advancement_extra.js",
+	"entity_extra": "coremods/anduril/entity_extra.js",
+	"piston_extra": "coremods/anduril/piston_extra.js",
+	"interface_hooks": "coremods/anduril/interface_hooks.js",
+	"ray_traces": "coremods/anduril/ray_traces.js",
+	"mains": "coremods/anduril/mains.js",
+	"logins": "coremods/anduril/logins.js",
+	"reflection_generic_fuckery": "coremods/anduril/reflection_generic_fuckery.js"
 }

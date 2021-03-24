@@ -1,0 +1,19 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"P",
+		"S"
+	],
+	"key": {
+		"P": {
+			"item": "anduril:praecantium"
+		},
+		"S": {
+			"item": "minecraft:stick"
+		}
+		
+	},
+	"result": {
+		"item": "anduril:wand"
+	}
+}

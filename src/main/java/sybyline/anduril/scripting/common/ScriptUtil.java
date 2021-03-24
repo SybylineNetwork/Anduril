@@ -5,9 +5,6 @@ import java.util.concurrent.*;
 import java.util.function.BiFunction;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.StringReader;
-import net.minecraft.block.Blocks;
-import net.minecraft.command.arguments.ItemArgument;
-import net.minecraft.item.ItemStack;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -50,14 +47,6 @@ public final class ScriptUtil implements IScriptUtil {
 		return escapeReplace(text, '\u00a7', '&');
 	}
 
-	public String translate(String key, Object... parameters) {
-		return i18n.apply(key, parameters);
-	}
-
-	public String format(String key, Object... parameters) {
-		return formatWithSpecial(key, parameters);
-	}
-
 	public void debug_info(Object message) {
 		CommonScripting.INSTANCE.println_debug(String.valueOf(message));
 	}
@@ -74,59 +63,7 @@ public final class ScriptUtil implements IScriptUtil {
 		System.err.println(message);
 	}
 
-	// Objects
-
-	public IMCResource new_resource(String domainpath) {
-		return new MCResource(domainpath);
-	}
-
-	public IMCResource new_resource(String domain, String path) {
-		return new MCResource(domain, path);
-	}
-
-	public IMCItem new_item(String item, int size) {
-		ItemStack stack;
-		try {
-			stack = ItemArgument.item().parse(new StringReader(item)).createStack(size, false);
-		} catch (Exception e) {
-			ScriptUtil.INSTANCE.log("Invalid item argument:" + item);
-			e.printStackTrace();
-			stack = new ItemStack(Blocks.STONE, size);
-		}
-		return new MCItem(stack);
-	}
-
 	// Internal
-
-	private String formatWithSpecial(String text, Object[] parameters) {
-		StringBuilder string = new StringBuilder();
-		StringReader reader = new StringReader(text);
-		int i = 0;
-		while (reader.canRead()) {
-			char chr = reader.read();
-			if (chr == '%') {
-				if (reader.canRead()) {
-					char next = reader.read();
-					if (next != '%') {
-						if (i < parameters.length) {
-							Object param = parameters[i++];
-							if (param instanceof IScriptCommandFormattable) {
-								((IScriptCommandFormattable)param).toCommandString(string);
-							} else {
-								String print = Convert.js_string_of(param, false);
-								string.append(print);
-							}
-						} else {
-							string.append(chr).append(next);
-						}
-					}
-				}
-			} else {
-				string.append(chr);
-			}
-		}
-		return string.toString();
-	}
 
 	private String escapeReplace(String text, char from, char to) {
 		StringBuilder string = new StringBuilder();
@@ -194,9 +131,9 @@ public final class ScriptUtil implements IScriptUtil {
 
 	@SubscribeEvent
 	void worldTick(TickEvent.WorldTickEvent event) {
+		if (event.phase == TickEvent.Phase.START) return;
 		if (event.world.isRemote) return;
 		if (event.world.dimension.getType() != DimensionType.OVERWORLD) return;
-		if (event.phase == TickEvent.Phase.START) return;
 		completeTasks();
 	}
 

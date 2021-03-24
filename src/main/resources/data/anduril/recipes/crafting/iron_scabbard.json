@@ -1,0 +1,22 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"  L",
+		" I ",
+		"I  "
+	],
+	"key": {
+		"I": {
+			"item": "minecraft:iron_ingot"
+		},
+		"L": {
+			"item": "minecraft:leather"
+		}
+	},
+	"result": {
+		"item": "anduril:scabbard",
+		"nbt": {
+			"ArmorSet": "anduril:iron"
+		}
+	}
+}

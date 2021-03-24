@@ -3,33 +3,38 @@ package sybyline.anduril.util.rtc;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.function.Supplier;
 
-import sybyline.anduril.util.Doc;
-import sybyline.anduril.util.Hacky;
+import sybyline.anduril.util.Util;
+import sybyline.anduril.util.annotation.Doc;
+import sybyline.anduril.util.annotation.Hacky;
 
 @Hacky("By nature.")
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class FieldWrapper<T> {
 
 	public static <T> FieldWrapper<T> of(Class<?> clazz, int index, @Doc("So we remember") String intendedName) {
-		return RuntimeTricks.procrastinate(() -> new FieldWrapper(clazz.getDeclaredFields()[index]));
+		return of(clazz.getDeclaredFields()[index]);
 	}
 
 	public static <T> FieldWrapper<T> of(Class<?> clazz, String... names) {
-		return RuntimeTricks.procrastinate(() -> new FieldWrapper(ReflectionTricks.findField(clazz, names)));
+		return of(ReflectionTricks.findField(clazz, names));
 	}
 
 	public static <T> FieldWrapper<T> of(Field f) {
-		return RuntimeTricks.procrastinate(() -> {
+		try {
 			return new FieldWrapper(f);
-		});
+		} catch (Throwable t) {
+			return Util.throwSilent(t);
+		}
 	}
 
 	private FieldWrapper(Field f) throws Exception {
 		f.setAccessible(true);
 		gets = MethodHandles.lookup().unreflectGetter(f);
 		sets = MethodHandles.lookup().unreflectSetter(f);
+		isStatic = Modifier.isStatic(f.getModifiers());
 	}
 
 	private final MethodHandle gets;
@@ -56,7 +61,11 @@ public class FieldWrapper<T> {
 	}
 
 	public T withGet(Object o) {
-		return (T) RuntimeTricks.procrastinate(() -> gets.bindTo(o).invoke());
+		try {
+			return (T) gets.bindTo(o).invoke();
+		} catch(Throwable t) {
+			return Util.throwSilent(t);
+		}
 	}
 
 	public FieldWrapper<T> with(Supplier<Object> os) {
@@ -72,33 +81,49 @@ public class FieldWrapper<T> {
 	}
 
 	public T set(T thing) {
-		if (isStatic) {
-			RuntimeTricks.procrastinate(() -> sets.invoke(thing));
-		} else if (supplier == null) {
-			RuntimeTricks.procrastinate(() -> setsb.invoke(thing));
-		} else {
-			RuntimeTricks.procrastinate(() -> sets.invoke(supplier.get(), thing));
+		try {
+			if (isStatic) {
+				sets.invoke(thing);
+			} else if (supplier == null) {
+				setsb.invoke(thing);
+			} else {
+				sets.invoke(supplier.get(), thing);
+			}
+			return thing;
+		} catch(Throwable t) {
+			return Util.throwSilent(t);
 		}
-		return thing;
 	}
 
 	public T get() {
-		if (isStatic) {
-			return (T) RuntimeTricks.procrastinate(() -> gets.invoke());
-		} else if (supplier == null) {
-			return (T) RuntimeTricks.procrastinate(() -> getsb.invoke());
-		} else {
-			return (T) RuntimeTricks.procrastinate(() -> gets.invoke(supplier.get()));
+		try {
+			if (isStatic) {
+				return (T) gets.invoke();
+			} else if (supplier == null) {
+				return (T) getsb.invoke();
+			} else {
+				return (T) gets.invoke(supplier.get());
+			}
+		} catch(Throwable t) {
+			return Util.throwSilent(t);
 		}
 	}
 
 	public T set(Object o, T thing) {
-		RuntimeTricks.procrastinate(() -> sets.invoke(o, thing));
-		return thing;
+		try {
+			sets.invoke(o, thing);
+			return thing;
+		} catch(Throwable t) {
+			return Util.throwSilent(t);
+		}
 	}
 
 	public T get(Object o) {
-		return (T) RuntimeTricks.procrastinate(() -> gets.invoke(o));
+		try {
+			return (T) gets.invoke(o);
+		} catch(Throwable t) {
+			return Util.throwSilent(t);
+		}
 	}
 
 }

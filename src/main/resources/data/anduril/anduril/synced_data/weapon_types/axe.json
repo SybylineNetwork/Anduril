@@ -1,0 +1,9 @@
+{
+	"location": "anduril:axe",
+	"damage": 6,
+	"speed": -3.2,
+	"reach": 1.0,
+	"weight": 45,
+	"durability": 0,
+	"damage_type": "slash"
+}

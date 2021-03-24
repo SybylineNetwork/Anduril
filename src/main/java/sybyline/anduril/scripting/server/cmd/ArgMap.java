@@ -4,6 +4,7 @@ import jdk.nashorn.api.scripting.*;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.*;
 
+@SuppressWarnings("restriction")
 public class ArgMap {
 
 	public static final SimpleCommandExceptionType REQUIRED_ARG = new SimpleCommandExceptionType(() -> "sybyline.scriptcmd.required");
@@ -33,7 +34,7 @@ public class ArgMap {
 
 	public void absent(String name, Object def) throws CommandSyntaxException {
 		if (def == null)
-			REQUIRED_ARG.createWithContext(new StringReader(name));
+			throw REQUIRED_ARG.createWithContext(new StringReader(name));
 		args.setMember(name, def);
 		defs.setMember(name, false);
 	}

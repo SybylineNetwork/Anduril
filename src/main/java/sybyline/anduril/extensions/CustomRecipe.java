@@ -33,7 +33,7 @@ public abstract class CustomRecipe<Inv extends IInventory> implements IRecipe<In
 	public CustomRecipe(ResourceLocation location, JsonObject json) {
 		this.location = location;
 		this.json = json;
-		String type = JSONUtils.getString(json, "type_recipe", JSONUtils.getString(json, "type"));
+		String type = JSONUtils.getString(json, "type_recipe", JSONUtils.getString(json, "type", "undefined"));
 		this.type = CustomRecipes.getOrRegister(type);
 		json.addProperty("NET_ID", location.toString());
 	}

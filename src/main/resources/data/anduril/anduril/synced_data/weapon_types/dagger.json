@@ -1,0 +1,9 @@
+{
+	"location": "anduril:dagger",
+	"damage": 2,
+	"speed": -2.2,
+	"reach": 0.5,
+	"weight": 10,
+	"durability": 0,
+	"damage_type": "pierce"
+}

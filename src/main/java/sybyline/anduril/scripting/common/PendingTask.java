@@ -2,6 +2,8 @@ package sybyline.anduril.scripting.common;
 
 import java.util.concurrent.*;
 
+import sybyline.anduril.util.function.Noop;
+
 public class PendingTask implements Future<Runnable> {
 
 	public static PendingTask of(Future<Runnable> future) {
@@ -70,7 +72,7 @@ public class PendingTask implements Future<Runnable> {
 
 	@Override
 	public Runnable get() {
-		return isCancelled() ? () -> {} : runnable;
+		return isCancelled() ? Noop.run() : runnable;
 	}
 
 	@Override

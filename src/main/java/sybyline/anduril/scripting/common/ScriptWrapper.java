@@ -1,15 +1,29 @@
 package sybyline.anduril.scripting.common;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
+
 import org.apache.commons.io.FileUtils;
+
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.LogicalSide;
-import sybyline.anduril.scripting.api.*;
+import sybyline.anduril.common.Proxy;
+import sybyline.anduril.scripting.api.ClientScriptExtensions;
+import sybyline.anduril.scripting.api.CommonScriptExtensions;
+import sybyline.anduril.scripting.api.ServerScriptExtensions;
 import sybyline.anduril.util.Util;
 import sybyline.anduril.util.data.IFormat;
-import sybyline.satiafenris.ene.*;
+import sybyline.satiafenris.ene.Script;
+import sybyline.satiafenris.ene.ScriptRuntimeException;
 
 public abstract class ScriptWrapper<T> {
 
@@ -34,8 +48,26 @@ public abstract class ScriptWrapper<T> {
 
 	protected abstract LogicalSide side();
 
+	protected boolean requireStrictness() {
+		return side() != LogicalSide.SERVER;
+	}
+
+	@SuppressWarnings("resource")
+	protected Stream<String> include(String resource) {
+		try {
+			if (resource.startsWith("mc:")) {
+				return new BufferedReader(new InputStreamReader(Proxy.PROXY.getResource(side(), Util.Structs.create(resource.substring(3))).getInputStream())).lines();
+			} else if (resource.startsWith("file:")) {
+				return new BufferedReader(new FileReader(Proxy.PROXY.findSaveSpecificFile(resource.substring(5)))).lines();
+			}
+		} catch(Exception ex) {
+			ex.printStackTrace();
+		}
+		return null;
+	}
+
 	protected final void setupInternal() throws ScriptRuntimeException {
-		script.strict().allowClasses(
+		if (requireStrictness()) script.strict().allowClasses(
 			"java.math.*",
 			"sybyline.anduril.util.math.*",
 			Object.class
@@ -54,6 +86,7 @@ public abstract class ScriptWrapper<T> {
 		}
 		this.script.bind("util", ScriptUtil.INSTANCE);
 		this.bindVariables();
+		this.script.setInclusions(this::include);
 		this.script.eval(source);
 	}
 

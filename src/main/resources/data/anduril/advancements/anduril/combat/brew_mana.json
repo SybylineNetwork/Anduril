@@ -1,0 +1,39 @@
+{
+  "parent": "anduril:anduril/combat/mine_praecantium",
+  "display": {
+    "icon": {
+      "item": "minecraft:potion",
+      "nbt": "{Potion:'anduril:mana_boost'}"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.brew_mana.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.brew_mana.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "boost": {
+      "trigger": "minecraft:brewed_potion",
+      "conditions": {
+        "potion": "anduril:mana_boost"
+      }
+    },
+    "regen": {
+      "trigger": "minecraft:brewed_potion",
+      "conditions": {
+        "potion": "anduril:mana_regeneration"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "boost",
+      "regen"
+    ]
+  ]
+}

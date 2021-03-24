@@ -10,10 +10,10 @@ public enum TemperatureScale {
 	FAHRENHEIT("fahrenheit");
 
 	private TemperatureScale(String name) {
-		this.tempname = "sybyline.temp.temperature" + name;
-		this.temptyname = "sybyline.tempty.temperature" + name;
-		this.dataname = "sybyline.itemdata.temperature" + name;
-		this.burnname = "sybyline.burntemp.temperature" + name;
+		this.tempname = "anduril.temp." + name;
+		this.temptyname = "anduril.tempty." + name;
+		this.dataname = "anduril.itemdata." + name;
+		this.burnname = "anduril.burntemp." + name;
 	}
 
 	private final String tempname;
@@ -42,7 +42,9 @@ public enum TemperatureScale {
 	}
 
 	public double convertTo(double value, TemperatureScale other) {
-		if (other == KELVIN) {
+		if (other == null) return value;
+		switch(other) {
+		case KELVIN:
 			if (this == KELVIN) {
 				return value;
 			} else if (this == CELSIUS) {
@@ -52,7 +54,7 @@ public enum TemperatureScale {
 			} else if (this == FAHRENHEIT) {
 				return value * (5D/9D) + 273.15D;
 			}
-		} else if (other == CELSIUS) {
+		case CELSIUS:
 			if (this == KELVIN) {
 				return value - 273.15D;
 			} else if (this == CELSIUS) {
@@ -62,7 +64,7 @@ public enum TemperatureScale {
 			} else if (this == FAHRENHEIT) {
 				return value * (5D/9D) - 17.77D;
 			}
-		} else if (other == RANKINE) {
+		case RANKINE:
 			if (this == KELVIN) {
 				return value * (9D/5D);
 			} else if (this == CELSIUS) {
@@ -72,7 +74,7 @@ public enum TemperatureScale {
 			} else if (this == FAHRENHEIT) {
 				return value + 459.67D;
 			}
-		} else if (other == FAHRENHEIT) {
+		case FAHRENHEIT:
 			if (this == KELVIN) {
 				return value * (9D/5D) - 459.67D;
 			} else if (this == CELSIUS) {
@@ -82,8 +84,9 @@ public enum TemperatureScale {
 			} else if (this == FAHRENHEIT) {
 				return value;
 			}
+		default:
+			return value;
 		}
-		return value;
 	}
 
 }

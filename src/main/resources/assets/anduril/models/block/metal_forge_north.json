@@ -1,0 +1,6 @@
+{
+    "parent": "anduril:block/metal_forge",
+    "textures": {
+        "top": "anduril:block/metal_forge_top_north"
+    }
+}

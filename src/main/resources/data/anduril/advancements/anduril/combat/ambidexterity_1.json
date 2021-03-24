@@ -1,0 +1,41 @@
+{
+  "parent": "anduril:anduril/combat/root",
+  "display": {
+    "icon": {
+      "item": "minecraft:golden_sword",
+      "nbt": "{Damage:0}"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.ambidexterity_1.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.ambidexterity_1.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "attacked_off_hand": {
+      "trigger": "anduril:damage_dealt_offhand",
+      "conditions": {
+        "stat": "anduril:damage_dealt_offhand",
+        "bound": {
+          "min": 10000
+        }
+      }
+    },
+    "purchase" : {
+      "trigger": "anduril:advancement_selection",
+      "conditions": {
+      }
+    }
+  },
+  "requirements": [
+    [
+      "attacked_off_hand",
+      "purchase"
+    ]
+  ]
+}

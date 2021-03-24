@@ -1,0 +1,34 @@
+{
+  "parent": "anduril:anduril/combat/cast_spells",
+  "display": {
+    "icon": {
+      "item": "minecraft:writable_book"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.will_it_compile.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.will_it_compile.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "cast": {
+      "trigger": "anduril:spells_cast_custom",
+      "conditions": {
+        "stat": "anduril:spells_cast_custom",
+        "bound": {
+          "min": 1
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "cast"
+    ]
+  ]
+}

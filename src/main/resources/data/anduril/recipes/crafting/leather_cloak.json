@@ -1,0 +1,22 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"LSL",
+		"LLL",
+		"LLL"
+	],
+	"key": {
+		"S": {
+			"item": "minecraft:string"
+		},
+		"L": {
+			"item": "minecraft:leather"
+		}
+	},
+	"result": {
+		"item": "anduril:cloak",
+		"nbt": {
+			"ArmorSet": "anduril:leather"
+		}
+	}
+}

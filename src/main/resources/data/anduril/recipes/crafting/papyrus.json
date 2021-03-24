@@ -1,0 +1,18 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"SPS"
+	],
+	"key": {
+		"P": {
+			"item": "minecraft:paper"
+		},
+		"S": {
+			"item": "minecraft:string"
+		}
+		
+	},
+	"result": {
+		"item": "anduril:papyrus"
+	}
+}

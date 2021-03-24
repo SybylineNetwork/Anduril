@@ -1,0 +1,25 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		" G ",
+		"GPG",
+		" G "
+	],
+	"key": {
+		"P": {
+			"item": "anduril:papyrus"
+		},
+		"G": {
+			"item": "anduril:praecantium"
+		}
+		
+	},
+	"result": {
+		"item": "anduril:glyph",
+		"nbt": {
+			"anduril_spell_glyph_data": {
+				"glyph": "anduril:name"
+			}
+		}
+	}
+}

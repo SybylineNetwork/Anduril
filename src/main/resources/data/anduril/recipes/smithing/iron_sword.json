@@ -1,0 +1,22 @@
+{
+	"type": "anduril:smithing",
+	"pattern": [
+		"X",
+		"X",
+		"#"
+	],
+	"key": {
+		"#": {
+			"item": "minecraft:stick"
+		},
+		"X": {
+			"item": "minecraft:iron_ingot"
+		}
+	},
+	"temperature": 1422,
+	"hits": 32,
+	"hammer_type": "blacksmith",
+	"result": {
+		"item": "minecraft:iron_sword"
+	}
+}

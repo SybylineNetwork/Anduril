@@ -1,0 +1,9 @@
+{
+	"location": "anduril:shovel",
+	"damage": 1.5,
+	"speed": -3.0,
+	"reach": 1.0,
+	"weight": 25,
+	"durability": 0,
+	"damage_type": "bludgeon"
+}

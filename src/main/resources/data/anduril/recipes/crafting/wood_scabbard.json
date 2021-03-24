@@ -1,0 +1,22 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"  L",
+		" I ",
+		"I  "
+	],
+	"key": {
+		"I": {
+			"tag": "minecraft:planks"
+		},
+		"L": {
+			"item": "minecraft:leather"
+		}
+	},
+	"result": {
+		"item": "anduril:scabbard",
+		"nbt": {
+			"ArmorSet": "anduril:silver"
+		}
+	}
+}

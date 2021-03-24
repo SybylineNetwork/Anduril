@@ -1,0 +1,52 @@
+package siege.common.siege.command.old;
+
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.command.CommandSource;
+import net.minecraft.util.text.StringTextComponent;
+import siege.common.mode.Mode;
+import siege.common.siege.Siege;
+import siege.common.siege.SiegeDatabase;
+import siege.common.siege.command.CommandBase;
+import siege.common.siege.command.SiegeCommands;
+
+@Deprecated
+public class CommandSiegeSetMode extends CommandBase {
+
+	@Override
+	public String getCommandName() {
+		return "siege_setmode";
+	}
+
+	@Override
+	public String getCommandUsage(CommandSource sender) {
+		return "/siege_setmode <siege> <mode> [<points needed>]";
+	}
+
+	@Override
+	public void processCommand(CommandSource sender, String[] args) {
+		if(args.length < 2) throw SiegeCommands.runtime("Not enough args!");
+		Siege siege = SiegeDatabase.getSiege(args[0]);
+		if(siege == null) throw SiegeCommands.runtime("No such siege '" + args[0] + "'!");
+		if(siege.isActive()) throw SiegeCommands.runtime("Siege is already running!");
+		if(siege.isDeleted()) throw SiegeCommands.runtime("Siege is deleted!");
+		Mode mode = Mode.of(args[1]);
+		if(mode == null) throw SiegeCommands.runtime("No such mode '" + args[1] + "'!");
+		if(mode.pointsNeededToWin != -1 && args.length < 3) throw SiegeCommands.runtime("This mode requires a target winning score!");
+		mode.pointsNeededToWin = parseIntWithMin(sender, args[2], 0, 0);
+		mode.setSiege(siege);
+		sender.sendFeedback(new StringTextComponent("Set the mode of siege '" + args[0] + "' to '" + args[1] + "'."), true);
+	}
+
+	@Override
+    public List<String> addTabCompletionOptions(CommandSource sender, String[] args) {
+		if(args.length == 1) {
+			return getListOfStringsMatchingLastWord(args, SiegeDatabase.getAllSiegeNames().toArray(new String[0]));
+		}
+		if(args.length == 2) {
+			return getListOfStringsMatchingLastWord(args, Mode.values());
+		}
+		List<String> ret = new ArrayList<>(); return ret;
+	}
+
+}

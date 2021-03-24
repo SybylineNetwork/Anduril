@@ -1,0 +1,35 @@
+{
+  "parent": "anduril:anduril/combat/root",
+  "display": {
+    "icon": {
+      "item": "anduril:praecantium_ore"
+    },
+    "title": {
+      "translate": "anduril.advancements.combat.mine_praecantium.title"
+    },
+    "description": {
+      "translate": "anduril.advancements.combat.mine_praecantium.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "praecantium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "anduril:praecantium"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "praecantium"
+    ]
+  ]
+}

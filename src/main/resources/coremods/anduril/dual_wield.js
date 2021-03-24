@@ -7,6 +7,9 @@
 function initializeCoreMod() {
 	Opcodes = Java.type("org.objectweb.asm.Opcodes");
 	FieldNode = Java.type("org.objectweb.asm.tree.FieldNode");
+	InsnList = Java.type("org.objectweb.asm.tree.InsnList");
+	VarInsnNode = Java.type("org.objectweb.asm.tree.VarInsnNode");
+	MethodInsnNode = Java.type("org.objectweb.asm.tree.MethodInsnNode");
 	return {
 		"LivingEntity.anduril_dual_wield": {
 			"target": {

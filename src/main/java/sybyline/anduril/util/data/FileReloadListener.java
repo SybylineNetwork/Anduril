@@ -7,6 +7,7 @@ import net.minecraft.client.resources.ReloadListener;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.resources.*;
 import net.minecraft.util.ResourceLocation;
+import sybyline.anduril.common.Anduril;
 import sybyline.anduril.util.Util;
 import sybyline.anduril.util.function.TriConsumer;
 
@@ -20,15 +21,16 @@ public class FileReloadListener<T> extends ReloadListener<Map<ResourceLocation, 
 	private final String folder_slash;
 	private final String extension;
 	private final int extension_length;
-	private final TriConsumer<Map<ResourceLocation, T>, IResourceManager, IProfiler> apply;
+	private final TriConsumer<Map<ResourceLocation, T>, IResourceManager, IProfiler> triConsumer;
 
-	public FileReloadListener(IFormat<T> format, String folder, TriConsumer<Map<ResourceLocation, T>, IResourceManager, IProfiler> apply) {
+	public FileReloadListener(IFormat<T> format, String folder, TriConsumer<Map<ResourceLocation, T>, IResourceManager, IProfiler> triConsumer) {
 		this.format = format;
 		this.folder = folder;
 		this.folder_slash = folder + "/";
 		this.extension = format.filename("");
 		this.extension_length = extension.length();
-		this.apply = apply;
+		this.triConsumer = triConsumer;
+		Anduril.LOGGER.info("New FileReloadListener:"+folder+"/*"+extension);
 	}
 
 	@Override
@@ -60,7 +62,16 @@ public class FileReloadListener<T> extends ReloadListener<Map<ResourceLocation, 
 
 	@Override
 	protected void apply(Map<ResourceLocation, T> data, IResourceManager resources, IProfiler profiler) {
-		this.apply.apply(data, resources, profiler);
+		this.triConsumer.accept(data, resources, profiler);
+	}
+
+	public FileReloadListener<T> register(IResourceManager resources) {
+		if (resources instanceof IReloadableResourceManager) {
+			((IReloadableResourceManager)resources).addReloadListener(this);
+		} else {
+			// maybe log, but there doesn't seem to be a good reason yet
+		}
+		return this;
 	}
 
 	protected ResourceLocation getPreparedPath(ResourceLocation location) {

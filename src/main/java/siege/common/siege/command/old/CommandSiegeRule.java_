@@ -1,0 +1,83 @@
+package siege.common.siege.command.old;
+
+import java.util.ArrayList;
+import java.util.List;
+import net.minecraft.command.CommandSource;
+import net.minecraft.util.text.StringTextComponent;
+import siege.common.rule.Rule;
+import siege.common.siege.Siege;
+import siege.common.siege.SiegeDatabase;
+import siege.common.siege.command.CommandBase;
+import siege.common.siege.command.SiegeCommands;
+
+@Deprecated
+public class CommandSiegeRule extends CommandBase {
+
+	@Override
+	public String getCommandName() {
+		return "siege_rules";
+	}
+
+	@Override
+	public String getCommandUsage(CommandSource sender) {
+		return "/siege_setmode <siege> <rule> <add|set-value|remove> [<value>]";
+	}
+
+	@Override
+	public void processCommand(CommandSource sender, String[] args) {
+		if(args.length < 3) throw SiegeCommands.runtime("Not enough args!");
+		Siege siege = SiegeDatabase.getSiege(args[0]);
+		if(siege == null) throw SiegeCommands.runtime("No such siege '" + args[0] + "'!");
+		if(siege.isActive()) throw SiegeCommands.runtime("Siege is already running!");
+		if(siege.isDeleted()) throw SiegeCommands.runtime("Siege is already finished!");
+		Rule rule = Rule.of(args[1]);
+		if(rule == null) throw SiegeCommands.runtime("No such rule '" + args[1] + "'!");
+		String op = args[2];
+		Rule prev = null;
+		for(Rule r : siege.mode.rules) {
+			if(r.getClass().equals(rule.getClass())) {
+				prev = r;
+				break;
+			}
+		}
+		if(op.equals("add")) {
+			if(prev == null) {
+				siege.mode.rules.add(rule);
+				sender.sendFeedback(new StringTextComponent("Added rule '" + args[1] + "'."), true);
+			} else {
+				sender.sendFeedback(new StringTextComponent("That rule is already in effect!"), true);
+			}
+		} else if(op.equals("set-value")) {
+			if(args.length < 4) throw SiegeCommands.runtime("Not enough args! Missing a value.");
+			if(prev == null) {
+				sender.sendFeedback(new StringTextComponent("That rule is not in effect! Add it first!"), true);
+			} else {
+				prev.setValue(sender, parseInt(sender, args[3], 0));
+			}
+		} else if(op.equals("remove")) {
+			if(prev == null) {
+				sender.sendFeedback(new StringTextComponent("That rule is not in effect!"), true);
+			} else {
+				siege.mode.rules.remove(prev);
+				sender.sendFeedback(new StringTextComponent("Removed rule '" + args[1] + "'."), true);
+			}
+		} else {
+			throw SiegeCommands.runtime("Invalid argument '" + op + "'!");
+		}
+	}
+
+	@Override
+    public List<String> addTabCompletionOptions(CommandSource sender, String[] args) {
+		if(args.length == 1) {
+			return getListOfStringsMatchingLastWord(args, SiegeDatabase.getAllSiegeNames().toArray(new String[0]));
+		}
+		if(args.length == 2) {
+			return getListOfStringsMatchingLastWord(args, Rule.values());
+		}
+		if(args.length == 3) {
+			return getListOfStringsMatchingLastWord(args, "add", "set-value", "remove");
+		}
+		List<String> ret = new ArrayList<>(); return ret;
+	}
+
+}

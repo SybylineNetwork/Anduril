@@ -1,6 +1,6 @@
 package sybyline.anduril.extensions.event;
 
-import sybyline.anduril.extensions.SybylineNetwork;
+import sybyline.anduril.common.network.SybylineNetwork;
 
 public class SybylineNetworkInitEvent extends SybylineEvent {
 

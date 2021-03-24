@@ -1,5 +1,7 @@
 package sybyline.vinyarion.dynamiccontent.api;
 
+import java.util.Set;
+
 public interface ResourceContext {
 
 	/**
@@ -56,9 +58,16 @@ public interface ResourceContext {
 	 */
 	public Resource getResource(String id);
 
+	public Set<String> getAllResources();
+
 	/**
 	 * @return The version of the remote repository
 	 */
 	public long getRemoteVersion();
+
+	/**
+	 * @return Extensions
+	 */
+	public <T> T getExtension(ResourceExtension<T> clazz);
 
 }

@@ -1,0 +1,9 @@
+{
+	"location": "anduril:pickaxe",
+	"damage": 1,
+	"speed": -2.8,
+	"reach": 1.0,
+	"weight": 35,
+	"durability": 0,
+	"damage_type": "pierce"
+}

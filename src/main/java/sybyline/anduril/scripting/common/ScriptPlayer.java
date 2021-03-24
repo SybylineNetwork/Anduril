@@ -2,19 +2,19 @@ package sybyline.anduril.scripting.common;
 
 import java.util.UUID;
 import java.util.function.Supplier;
+
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.StringTextComponent;
 import sybyline.anduril.scripting.api.common.IScriptPlayer;
-import sybyline.anduril.scripting.api.data.IScriptData;
 import sybyline.anduril.scripting.api.server.IPermission;
-import sybyline.anduril.scripting.data.ScriptPlayerData;
 import sybyline.anduril.scripting.server.ServerManagement;
-import sybyline.anduril.util.math.Vector;
 
 public class ScriptPlayer implements IScriptPlayer {
 
@@ -41,38 +41,37 @@ public class ScriptPlayer implements IScriptPlayer {
 	}
 
 	@Override
-	public IScriptData data() {
+	public CompoundNBT data() {
 		return parent.data(domain);
 	}
 
 	@Override
-	public Vector pos() {
+	public Vec3d pos() {
 		Entity entity = check();
-		return new Vector(entity.getPosX(), entity.getPosY(), entity.getPosZ());
+		return entity.getPositionVec();
 	}
 
 	@Override
-	public void pos(Vector position) {
-		check().setPositionAndUpdate(position.x(), position.y(), position.z());
+	public void pos(Vec3d position) {
+		check().setPositionAndUpdate(position.getX(), position.getY(), position.getZ());
 	}
 
 	@Override
-	public void move(Vector position) {
-		check().move(MoverType.SELF, new Vec3d(position.x(), position.y(), position.z()));
+	public void move(Vec3d position) {
+		check().move(MoverType.SELF, position);
 	}
 
 	@Override
-	public Vector look() {
-		Vec3d look = check().getLookVec();
-		return new Vector(look.x, look.y, look.z);
+	public Vec3d look() {
+		return check().getLookVec();
 	}
 
 	@Override
-	public void look(Vector look) {
+	public void look(Vec3d look) {
 		Entity entity = check();
-		double x = look.x(), z = look.z();
+		double x = look.getX(), z = look.getZ();
 		double dist = MathHelper.sqrt(x * x + z * z);
-		float rotationPitch = MathHelper.wrapDegrees((float)(-(MathHelper.atan2(look.y(), dist) * (double)(180F / (float)Math.PI))));
+		float rotationPitch = MathHelper.wrapDegrees((float)(-(MathHelper.atan2(look.getY(), dist) * (double)(180F / (float)Math.PI))));
 	    float rotationYaw = MathHelper.wrapDegrees((float)(MathHelper.atan2(z, x) * (double)(180F / (float)Math.PI)) - 90.0F);
 	    entity.setPositionAndRotation(entity.getPosX(), entity.getPosY(), entity.getPosZ(), rotationYaw, rotationPitch);
 	}
@@ -130,6 +129,21 @@ public class ScriptPlayer implements IScriptPlayer {
 	@Override
 	public void revokePermission(IPermission permission) {
 		parent.permissions.remove(permission.key());
+	}
+
+	@Override
+	public Entity getRawEntity() {
+		return check();
+	}
+
+	@Override
+	public LivingEntity getRawLiving() {
+		return check();
+	}
+
+	@Override
+	public PlayerEntity getRawPlayer() {
+		return check();
 	}
 
 }

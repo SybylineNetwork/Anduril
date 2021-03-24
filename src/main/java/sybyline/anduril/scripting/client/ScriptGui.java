@@ -19,7 +19,6 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.StringTextComponent;
 import sybyline.anduril.scripting.api.client.*;
-import sybyline.anduril.scripting.api.common.*;
 import sybyline.anduril.scripting.common.*;
 import sybyline.anduril.util.Util;
 
@@ -42,8 +41,8 @@ public final class ScriptGui<SubScreen extends FocusableGui & IRenderable> imple
 		this.scriptParent.onClose();
 	}
 
-	public void gui_display(IMCResource location, Object data) {
-		ScriptGuiWrapper<?> newScreen = ClientScripting.INSTANCE.tryOpen(((MCResource)location).location, data);
+	public void gui_display(ResourceLocation location, Object data) {
+		ScriptGuiWrapper<?> newScreen = ClientScripting.INSTANCE.tryOpen(location, data);
 		if (newScreen != null) {
 			newScreen.parent = this.scriptParent;
 		}
@@ -53,17 +52,16 @@ public final class ScriptGui<SubScreen extends FocusableGui & IRenderable> imple
 		this.scriptParent.getMinecraft().getSoundHandler().play(SimpleSound.master(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 	}
 
-	public void bind_resource(IMCResource resource) {
-		this.scriptParent.getMinecraft().getTextureManager().bindTexture(((MCResource)resource).location);
+	public void bind_resource(ResourceLocation resource) {
+		this.scriptParent.getMinecraft().getTextureManager().bindTexture(resource);
 	}
 
-	public void draw_item(IMCItem stack, int x, int y, String text, boolean overlay) {
-		ItemStack mcstack = ((MCItem)stack).__stack;
+	public void draw_item(ItemStack stack, int x, int y, String text, boolean overlay) {
 		if (overlay) {
-			this.scriptParent.getItemRenderer().renderItemOverlayIntoGUI(this.font(), mcstack, x, y, text);
+			this.scriptParent.getItemRenderer().renderItemOverlayIntoGUI(this.font(), stack, x, y, text);
 		}
 		RenderHelper.enableStandardItemLighting();
-		this.scriptParent.getItemRenderer().renderItemAndEffectIntoGUI(mcstack, x, y);
+		this.scriptParent.getItemRenderer().renderItemAndEffectIntoGUI(stack, x, y);
 		RenderHelper.disableStandardItemLighting();
 	}
 
@@ -219,11 +217,11 @@ public final class ScriptGui<SubScreen extends FocusableGui & IRenderable> imple
 		this.font().drawString(".", x, y - 6, color);
 	}
 
-	public IScriptWidgetTexture new_textureSimple(IMCResource location) {
+	public IScriptWidgetTexture new_textureSimple(ResourceLocation location) {
 		return IScriptWidgetTexture.of(location);
 	}
 
-	public IScriptWidgetTextureSet new_textureSet(IMCResource location, int width, int height) {
+	public IScriptWidgetTextureSet new_textureSet(ResourceLocation location, int width, int height) {
 		return IScriptWidgetTextureSet.of(location, height, height);
 	}
 

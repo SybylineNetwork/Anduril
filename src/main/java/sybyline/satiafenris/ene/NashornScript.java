@@ -2,6 +2,7 @@ package sybyline.satiafenris.ene;
 
 import jdk.nashorn.api.scripting.*;
 
+@SuppressWarnings("restriction")
 public class NashornScript extends AbstractScript {
 
 	private static final NashornScriptEngineFactory NASHORN = new NashornScriptEngineFactory();
@@ -10,14 +11,9 @@ public class NashornScript extends AbstractScript {
 	public final ScriptObjectMirror Java;
 
 	NashornScript() {
-		super(predicate -> NASHORN.getScriptEngine(name -> predicate.test(name)));
+		super(predicate -> NASHORN.getScriptEngine(/*name -> predicate.test(name)*/));
 		nashorn = (NashornScriptEngine) engine;
 		Java = get("Java");
-	}
-
-	@Override
-	public <T> ScriptVariable<T> variable(String name) {
-		return new ScriptVariableImpl<T>(this, name);
 	}
 
 }

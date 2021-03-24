@@ -2,6 +2,7 @@ package sybyline.anduril.scripting.server.cmd;
 
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.Lists;
@@ -66,6 +67,11 @@ public class ScriptCommand implements IScriptCommand {
 			CommonScripting.LOGGER.error("A script command has failed: ", e);
 			return 69;
 		}
+	}
+
+	@Override
+	public void withRaw(UnaryOperator<LiteralArgumentBuilder<CommandSource>> rawCommand) {
+		literal = rawCommand.apply(literal);
 	}
 
 	// Senders

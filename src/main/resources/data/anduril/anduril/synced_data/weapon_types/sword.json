@@ -1,0 +1,9 @@
+{
+	"location": "anduril:sword",
+	"damage": 3,
+	"speed": -2.4,
+	"reach": 1.0,
+	"weight": 20,
+	"durability": 0,
+	"damage_type": "slash"
+}

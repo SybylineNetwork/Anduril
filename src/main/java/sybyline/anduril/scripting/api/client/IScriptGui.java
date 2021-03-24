@@ -1,11 +1,15 @@
 package sybyline.anduril.scripting.api.client;
 
-import java.util.*;
-import java.util.function.*;
-import net.minecraft.client.gui.*;
+import java.util.List;
+import java.util.function.Consumer;
+
+import net.minecraft.client.gui.FocusableGui;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.IRenderable;
 import net.minecraft.client.gui.widget.Widget;
-import sybyline.anduril.scripting.api.common.IMCItem;
-import sybyline.anduril.scripting.api.common.IMCResource;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 
 public interface IScriptGui<SubScreen extends FocusableGui & IRenderable> {
 
@@ -13,11 +17,11 @@ public interface IScriptGui<SubScreen extends FocusableGui & IRenderable> {
 
 	public void gui_close();
 
-	public default void gui_display(IMCResource location) {
+	public default void gui_display(ResourceLocation location) {
 		gui_display(location, null);
 	}
 
-	public void gui_display(IMCResource location, Object data);
+	public void gui_display(ResourceLocation location, Object data);
 
 	public void gui_clickSound();
 
@@ -82,19 +86,19 @@ public interface IScriptGui<SubScreen extends FocusableGui & IRenderable> {
 
 	// Item
 
-	public default void draw_item(IMCItem stack, int x, int y) {
+	public default void draw_item(ItemStack stack, int x, int y) {
 		this.draw_item(stack, x, y, null, true);
 	}
 
-	public default void draw_item(IMCItem stack, int x, int y, boolean overlay) {
+	public default void draw_item(ItemStack stack, int x, int y, boolean overlay) {
 		this.draw_item(stack, x, y, null, overlay);
 	}
 
-	public default void draw_item(IMCItem stack, int x, int y, String text) {
+	public default void draw_item(ItemStack stack, int x, int y, String text) {
 		this.draw_item(stack, x, y, text, true);
 	}
 
-	public void draw_item(IMCItem stack, int x, int y, String text, boolean overlay);
+	public void draw_item(ItemStack stack, int x, int y, String text, boolean overlay);
 
 	// Tooltip
 
@@ -132,15 +136,15 @@ public interface IScriptGui<SubScreen extends FocusableGui & IRenderable> {
 
 	// Resources
 
-	public void bind_resource(IMCResource resource);
+	public void bind_resource(ResourceLocation resource);
 
 	// Simple textures
 
-	public IScriptWidgetTexture new_textureSimple(IMCResource location);
+	public IScriptWidgetTexture new_textureSimple(ResourceLocation location);
 
 	// Texture sets
 
-	public IScriptWidgetTextureSet new_textureSet(IMCResource location, int width, int height);
+	public IScriptWidgetTextureSet new_textureSet(ResourceLocation location, int width, int height);
 
 	// Buttons
 

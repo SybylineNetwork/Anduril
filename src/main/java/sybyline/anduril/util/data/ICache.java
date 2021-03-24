@@ -1,9 +1,7 @@
 package sybyline.anduril.util.data;
 
-import java.util.function.Function;
-
+import java.util.function.*;
 import javax.annotation.Nullable;
-
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 
@@ -33,6 +31,10 @@ public interface ICache<Identifier, Data, Type extends ICachable<Data>> {
 	public void saveStaleEntries();
 
 	public void saveAllEntries();
+
+	public static <Data, Type extends ICachable<Data>> ICache<String, Data, Type> files(ResourceLocation location, IFormat<Data> format, Function<String, Type> factory) {
+		return files(location, format, factory, UnaryOperator.identity());
+	}
 
 	public static <Identifier, Data, Type extends ICachable<Data>> ICache<Identifier, Data, Type> files(ResourceLocation location, IFormat<Data> format, Function<Identifier, Type> factory, Function<Identifier, String> filenameFactory) {
 		return new FileCache<Identifier, Data, Type>(location, format, factory, filenameFactory);

@@ -1,0 +1,9 @@
+{
+	"location": "anduril:pike",
+	"damage": 4,
+	"speed": -2.8,
+	"reach": 2.0,
+	"weight": 40,
+	"durability": 0,
+	"damage_type": "pierce"
+}

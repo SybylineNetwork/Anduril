@@ -1,6 +1,11 @@
 package sybyline.satiafenris.ene;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.function.*;
+import java.util.stream.Stream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import sybyline.anduril.util.function.*;
 
 /**
@@ -11,11 +16,14 @@ import sybyline.anduril.util.function.*;
 public interface Script {
 
 	/**
-	 * Script instances have two engine-context-level functions: {@code use(String)},
-	 * which emulates a java {@code import} keyword, and {@code exists(Object)}, which tests if
-	 * an object is null or undefined.
+	 * Public common logger object.
+	 */
+	public static final Logger LOG = LogManager.getLogger("EneScript");
+
+	/**
+	 * Script instances have engine-context-level functions: {@code use(String)},
+	 * which emulates a java {@code import} keyword.
 	 * Ex.: {@code use("java.util.ArrayList")}, {@code use("java.util.ArrayList", "JavaList")}
-	 * Ex.: {@code if (exists(object.property)) print(object.property)}
 	 * @return A new Nashorn Script instance.
 	 */
 	public static Script nashorn() {
@@ -24,10 +32,8 @@ public interface Script {
 
 	/**
 	 * Script instances have two engine-context-level functions: {@code use(String)},
-	 * which emulates a java {@code import} keyword, and {@code exists(Object)}, which tests if
-	 * an object is null or undefined.
+	 * which emulates a java {@code import} keyword.
 	 * Ex.: {@code use("java.util.ArrayList")}, {@code use("java.util.ArrayList", "JavaList")}
-	 * Ex.: {@code if (exists(object.property)) print(object.property)}
 	 * @return A new GraalJS Script instance, or a Nashorn Script instance if the environment
 	 * does not support Graal.
 	 */
@@ -36,10 +42,25 @@ public interface Script {
 	}
 
 	/**
+	 * @return A new Java script
+	 */
+	public static Script java() {
+		return AbstractScript.java();
+	}
+
+	/**
 	 * Forces the ClassFilter to be enabled
 	 * @return this
 	 */
 	public Script strict();
+
+	public default boolean isJS() {
+		return true;
+	}
+
+	public default Script setInclusions(Function<String, Stream<String>> include) {
+		return this;
+	}
 
 	/**
 	 * Allow the script to reference and possibly instantiate the types specified.
@@ -88,6 +109,33 @@ public interface Script {
 	public <T> T eval(String expression) throws ScriptRuntimeException;
 
 	/**
+	 * Evaluates an expression, run through the preprocessor
+	 * @param expression The expression
+	 * @param include The inclusion method
+	 * @return The value of the expression, or null if the expression doesn't resolve to a value
+	 */
+	public default <T> T evalPrerocessor(String expression, Function<String, Stream<String>> include) throws ScriptRuntimeException {
+		return this.eval(Preprocessor.preprocess(expression, include, this::isPreprocessorFlag));
+	}
+
+	public boolean isPreprocessorFlag(String flag);
+
+	public Script setPreprocessorFlags(String... string);
+
+	/**
+	 * Evaluates an expression, run through the preprocessor
+	 * @param expression The expression
+	 * @return The value of the expression, or null if the expression doesn't resolve to a value
+	 */
+	public default <T> T evalPreprocessor(String expression) throws ScriptRuntimeException {
+		return this.evalPrerocessor(expression, this::inclusion);
+	}
+
+	public default Stream<String> inclusion(String resource) {
+		return Preprocessor.DEFAULT_INCLUDE.apply(resource);
+	}
+
+	/**
 	 * Obtains an encapsulating reference to a function defined at the script context level
 	 * @param name The function to reference
 	 * @return The reference to the function
@@ -102,6 +150,8 @@ public interface Script {
 	public <T> ScriptVariable<T> variable(String name);
 
 	public default <Interface> void bindMethodGeneric(String name, Interface method) { bind(name, method); }
+
+	public default <T> void bindMethodVarargs(String name, VarFunction<T> method) { bind(name, method); }
 
 	public default void bindMethod(String name, Runnable method) { bind(name, method); }
 	public default <A> void bindMethod(String name, Consumer<A> method) { bind(name, method); }
@@ -133,6 +183,14 @@ public interface Script {
 		}
 		ScriptMethod<T> method = method(name);
 		return method::call;
+	}
+
+	public default <Interface> Interface implementProxy(Class<Interface> clazz) {
+		@SuppressWarnings("unchecked")
+		Interface ret = (Interface) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[]{ clazz }, (Object thiz, Method method, Object[] args) -> {
+			return this.method(method.getName()).implementation_call(args);
+		});
+		return ret;
 	}
 
 	public <T> T newObjectType();
